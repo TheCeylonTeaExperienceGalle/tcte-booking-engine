@@ -201,3 +201,57 @@ describe("payment plan booking status", () => {
     expect(plan.balance).toBe(12000);
   });
 });
+
+function priceWithRule(discountType, discountValue) {
+  return calculateBookingPricing({
+    selections: [{ sessionId: 1, sessionTypeId: 11, seatsRequested: 1 }],
+    sessionMap: sessionMapFrom([session10k]),
+    discountRules: [
+      {
+        id: 9,
+        name: "edge",
+        discountType,
+        discountValue,
+        sessionIds: "[1]",
+      },
+    ],
+  });
+}
+
+describe("discount validation clamps", () => {
+  it("treats a negative fixed amount as no discount", () => {
+    const pricing = priceWithRule("FIXED_AMOUNT", -1000);
+    expect(pricing.discountAmount).toBe(0);
+    expect(pricing.fullTotal).toBe(12000);
+  });
+
+  it("treats a zero fixed amount as no discount", () => {
+    const pricing = priceWithRule("FIXED_AMOUNT", 0);
+    expect(pricing.discountAmount).toBe(0);
+    expect(pricing.fullTotal).toBe(12000);
+  });
+
+  it("clamps a fixed discount larger than gross so the final total is not negative", () => {
+    const pricing = priceWithRule("FIXED_AMOUNT", 50000);
+    expect(pricing.discountAmount).toBe(12000);
+    expect(pricing.fullTotal).toBe(0);
+  });
+
+  it("treats a negative percentage as no discount", () => {
+    const pricing = priceWithRule("PERCENTAGE", -10);
+    expect(pricing.discountAmount).toBe(0);
+    expect(pricing.fullTotal).toBe(12000);
+  });
+
+  it("caps percentage above 100 at a free booking", () => {
+    const pricing = priceWithRule("PERCENTAGE", 150);
+    expect(pricing.discountAmount).toBe(12000);
+    expect(pricing.fullTotal).toBe(0);
+  });
+
+  it("allows a 100% discount to reach a zero total, not a negative total", () => {
+    const pricing = priceWithRule("PERCENTAGE", 100);
+    expect(pricing.discountAmount).toBe(12000);
+    expect(pricing.fullTotal).toBe(0);
+  });
+});

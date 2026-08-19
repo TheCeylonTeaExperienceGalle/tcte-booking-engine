@@ -330,7 +330,7 @@ model DiscountRule {
     description     String?
     sessionIds      String    // JSON array of session IDs that trigger this discount e.g., "[1,2,3]"
     discountType    DiscountType @default(PERCENTAGE)
-    discountValue   Float     // Percentage or fixed amount
+    discountValue   Float     // Percentage off, or fixed currency amount off the gross
     priority        Int       @default(0) // Higher priority rules are applied first
     isActive        Boolean   @default(true)
     createdAt       DateTime  @default(now())

@@ -28,6 +28,7 @@ import {
   parsePhoneNumberFromString,
 } from "libphonenumber-js";
 import metadata from "libphonenumber-js/metadata.min.json";
+import { resolvePaymentPlan } from "@/lib/pricing/booking-pricing";
 
 // Dummy availability data until the API layer is ready
 const SEASON_AVAILABILITY = {
@@ -132,7 +133,6 @@ export default function BookNow() {
     payment: "Full",
     notes: "",
     promoCode: "",
-    partialAmount: "",
   });
   const [seasonSelections, setSeasonSelections] = useState({});
   const [useGlobalSeatCount, setUseGlobalSeatCount] = useState(false);
@@ -777,6 +777,16 @@ export default function BookNow() {
     return totalCost;
   }, [totalCost, discountInfo]);
 
+  const partialPlanPreview = useMemo(
+    () =>
+      resolvePaymentPlan({
+        paymentType: "Partial",
+        provider: "PAYHERE",
+        fullTotal: discountedTotalCost,
+      }),
+    [discountedTotalCost]
+  );
+
   const paymentBreakdown = useMemo(() => {
     const entries = [];
     const includeSeasonLevelSessionTypes = !(
@@ -894,13 +904,7 @@ export default function BookNow() {
     setFormData(prev => ({
       ...prev,
       payment: value,
-      partialAmount: value === "Full" ? "" : prev.partialAmount
     }));
-  };
-
-  const handlePartialAmountChange = (e) => {
-    const value = e.target.value;
-    setFormData(prev => ({ ...prev, partialAmount: value }));
   };
 
   const validatePhoneNumber = useCallback((countryIso, rawNumber) => {
@@ -1783,12 +1787,6 @@ export default function BookNow() {
         selections: bookingSelections,
         payment: {
           paymentType: formData.payment,
-          full_payment_price: Number(discountedTotalCost),
-          amount: formData.payment === "Partial"
-            ? Number(formData.partialAmount)
-            : formData.payment === "Later"
-              ? 0
-              : Number(discountedTotalCost),
           provider: formData.payment === "Later" ? "MANUAL" : "PAYHERE",
           currency: "USD",
           method: formData.payment === "Later" ? "Pay Later" : "PayHere Checkout",
@@ -2902,7 +2900,9 @@ export default function BookNow() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Full">Full Payment ({formatPrice(discountedTotalCost)})</SelectItem>
-                              <SelectItem value="Partial">Partial Payment (Total: {formatPrice(discountedTotalCost)})</SelectItem>
+                              <SelectItem value="Partial">
+                                Partial Payment (Pay 50% now: {formatPrice(partialPlanPreview.amountDueNow)})
+                              </SelectItem>
                               <SelectItem value="Later">Pay Later</SelectItem>
                             </SelectContent>
                           </Select>
@@ -2910,26 +2910,17 @@ export default function BookNow() {
 
                         {formData.payment === "Partial" && (
                           <div className="grid gap-2 p-4 bg-secondary/20 rounded-lg">
-                            <Label htmlFor="partialAmount">Enter Payment Amount (USD)</Label>
-                            <div className="flex items-center gap-2">
-                              <Input
-                                id="partialAmount"
-                                type="number"
-                                min="0"
-                                max={discountedTotalCost}
-                                value={formData.partialAmount}
-                                onChange={handlePartialAmountChange}
-                                placeholder="Enter amount to pay now"
-                                className="border-primary/30"
-                              />
-                              <span className="text-sm font-medium whitespace-nowrap text-muted-foreground">
-                                of {formatPrice(discountedTotalCost)}
+                            <p className="text-sm font-medium">Partial Payment</p>
+                            <div className="flex justify-between text-sm">
+                              <span>Pay 50% now:</span>
+                              <span className="font-bold text-primary">
+                                {formatPrice(partialPlanPreview.amountDueNow)}
                               </span>
                             </div>
                             <div className="flex justify-between text-sm mt-2 pt-2 border-t border-primary/10">
-                              <span>Remaining Balance:</span>
+                              <span>Remaining balance:</span>
                               <span className="font-bold text-primary">
-                                {formatPrice(Math.max(0, discountedTotalCost - (Number(formData.partialAmount) || 0)))}
+                                {formatPrice(partialPlanPreview.balance)}
                               </span>
                             </div>
                           </div>

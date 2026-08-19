@@ -288,9 +288,9 @@ export default function DiscountRulesPage() {
 
   const formatDiscount = (rule) => {
     if (rule.discountType === "PERCENTAGE") {
-      return `${rule.discountValue}%`;
+      return `${rule.discountValue}% off`;
     }
-    return `USD. ${rule.discountValue.toFixed(2)}`;
+    return `USD. ${rule.discountValue.toFixed(2)} off`;
   };
 
   return (
@@ -600,14 +600,16 @@ export default function DiscountRulesPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
-                    <SelectItem value="FIXED_AMOUNT">Fixed Amount (USD.)</SelectItem>
+                    <SelectItem value="PERCENTAGE">Percentage Off</SelectItem>
+                    <SelectItem value="FIXED_AMOUNT">Fixed Amount Off</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="discountValue" style={{ color: "#767014" }}>
-                  Discount Value *
+                  {formData.discountType === "PERCENTAGE"
+                    ? "Percentage Off *"
+                    : "Amount Off *"}
                 </Label>
                 <div className="relative">
                   <Input
@@ -616,7 +618,7 @@ export default function DiscountRulesPage() {
                     min="0"
                     max={formData.discountType === "PERCENTAGE" ? "100" : undefined}
                     step="0.01"
-                    placeholder={formData.discountType === "PERCENTAGE" ? "e.g., 10" : "e.g., 500"}
+                    placeholder={formData.discountType === "PERCENTAGE" ? "e.g., 10" : "e.g., 500 off"}
                     value={formData.discountValue}
                     onChange={(e) => setFormData({ ...formData, discountValue: e.target.value })}
                     required
@@ -636,6 +638,11 @@ export default function DiscountRulesPage() {
                     </span>
                   )}
                 </div>
+                <p className="text-xs" style={{ color: "#000000", opacity: 0.5 }}>
+                  {formData.discountType === "PERCENTAGE"
+                    ? "Percentage off the gross session + add-on total."
+                    : "Fixed currency amount off the gross session + add-on total. This is not a final package price."}
+                </p>
               </div>
             </div>
 
