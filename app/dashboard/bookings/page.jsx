@@ -174,7 +174,14 @@ export default function BookingsPage() {
             </div>
             {dayStats.revenue > 0 && (
               <Badge variant="secondary" className="text-lg px-3 py-1 font-medium">
-                {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(dayStats.revenue)}
+                <span className="flex flex-col items-end leading-tight">
+                  <span>
+                    {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(dayStats.revenue)}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider opacity-80">
+                    Booking value
+                  </span>
+                </span>
               </Badge>
             )}
           </div>

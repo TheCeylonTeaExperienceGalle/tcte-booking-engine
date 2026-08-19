@@ -11,6 +11,12 @@ import {
   PricingError,
 } from "@/lib/pricing/booking-pricing";
 import { appendOrderIdToUrl } from "@/lib/payments/payhere-urls";
+import { isPayHereEnabled } from "@/lib/payments/payhere-enabled";
+import {
+  buildPublicBookingResponse,
+  isCheckoutAttemptUniqueConflict,
+  normalizeCheckoutAttemptId,
+} from "@/lib/bookings/checkout-attempt";
 
 const PAYMENT_TYPES = new Set(["Full", "Partial", "Later"]);
 const PAYMENT_PROVIDERS = new Set(["MANUAL", "PAYHERE"]);
@@ -59,6 +65,7 @@ function isRetryableError(error) {
 }
 
 export async function POST(request) {
+  let checkoutAttemptId = null;
   try {
     const payload = await request.json();
     const validationError = validatePayload(payload);
@@ -77,8 +84,23 @@ export async function POST(request) {
       selections,
       payment = {},
       customer = {},
-
+      checkoutAttemptId: rawCheckoutAttemptId,
     } = payload;
+
+    const parsedCheckoutAttemptId = normalizeCheckoutAttemptId(rawCheckoutAttemptId);
+    if (rawCheckoutAttemptId && !parsedCheckoutAttemptId) {
+      return NextResponse.json(
+        { success: false, error: "checkoutAttemptId must be a UUID" },
+        { status: 400 }
+      );
+    }
+    if (!parsedCheckoutAttemptId) {
+      return NextResponse.json(
+        { success: false, error: "checkoutAttemptId is required" },
+        { status: 400 }
+      );
+    }
+    checkoutAttemptId = parsedCheckoutAttemptId;
 
     const {
       paymentType,
@@ -92,6 +114,23 @@ export async function POST(request) {
     const paymentProvider = PAYMENT_PROVIDERS.has(normalizedProvider)
       ? normalizedProvider
       : "MANUAL";
+
+    if (paymentProvider === "PAYHERE" && !isPayHereEnabled()) {
+      return NextResponse.json(
+        { success: false, error: "Online payment is currently unavailable." },
+        { status: 400 }
+      );
+    }
+
+    const existingCheckout = await prisma.booking.findUnique({
+      where: { checkoutAttemptId },
+      include: { payment: true },
+    });
+    if (existingCheckout) {
+      return NextResponse.json(
+        await buildExistingCheckoutResponse(existingCheckout)
+      );
+    }
 
     const bookingDate = new Date(bookedDate);
     if (Number.isNaN(bookingDate.getTime())) {
@@ -246,6 +285,7 @@ export async function POST(request) {
                 paymentId: paymentRecord.id,
                 status: bookingStatus,
                 additionalNotes: additionalNotes,
+                checkoutAttemptId,
               },
             });
 
@@ -365,17 +405,26 @@ export async function POST(request) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      bookingId: booking.id,
-      referenceCode: paymentRecord.orderId,
-      message:
-        paymentProvider === "PAYHERE"
-          ? "Booking created. Redirecting to payment gateway."
-          : "Booking created successfully",
-      paymentRedirect,
-    });
+    return NextResponse.json(
+      buildPublicBookingResponse({
+        bookingId: booking.id,
+        referenceCode: paymentRecord.orderId,
+        paymentProvider,
+        paymentRedirect,
+        duplicate: false,
+      })
+    );
   } catch (error) {
+    if (isCheckoutAttemptUniqueConflict(error)) {
+      const replay = await replayExistingCheckout(checkoutAttemptId, {
+        retries: 8,
+        delayMs: 25,
+      });
+      if (replay) {
+        return NextResponse.json(replay);
+      }
+    }
+
     console.error("Booking creation failed");
 
     // Handle specific concurrency-related errors with user-friendly messages
@@ -396,6 +445,73 @@ export async function POST(request) {
 
     return NextResponse.json({ success: false, error: message }, { status });
   }
+}
+
+async function replayExistingCheckout(attemptId, options = {}) {
+  if (!attemptId) {
+    return null;
+  }
+  const retries = Number.isInteger(options.retries) ? options.retries : 0;
+  const delayMs = Number.isInteger(options.delayMs) ? options.delayMs : 25;
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    const existing = await prisma.booking.findUnique({
+      where: { checkoutAttemptId: attemptId },
+      include: { payment: true },
+    });
+    if (existing) {
+      return buildExistingCheckoutResponse(existing);
+    }
+    if (attempt < retries) {
+      await sleep(delayMs);
+    }
+  }
+  return null;
+}
+
+async function buildExistingCheckoutResponse(existingCheckout) {
+  const paymentRecord = existingCheckout.payment;
+  let paymentRedirect = null;
+
+  if (paymentRecord?.provider === "PAYHERE" && isPayHereEnabled()) {
+    const payHereConfig = getPayHereConfig();
+    const currency = paymentRecord.currency || "USD";
+    const amountFormatted = formatPayHereAmount(paymentRecord.amount);
+    const hashedSecret = md5Upper(payHereConfig.merchantSecret);
+    const hash = md5Upper(
+      `${payHereConfig.merchantId}${paymentRecord.orderId}${amountFormatted}${currency}${hashedSecret}`
+    );
+    paymentRedirect = {
+      actionUrl: payHereConfig.actionUrl,
+      params: {
+        merchant_id: payHereConfig.merchantId,
+        return_url: appendOrderIdToUrl(
+          payHereConfig.returnUrl,
+          paymentRecord.orderId
+        ),
+        cancel_url: appendOrderIdToUrl(
+          payHereConfig.cancelUrl,
+          paymentRecord.orderId
+        ),
+        notify_url: payHereConfig.notifyUrl,
+        order_id: paymentRecord.orderId,
+        items: "Tea Experience Booking",
+        currency,
+        amount: amountFormatted,
+        hash,
+        custom_1: String(existingCheckout.id),
+        custom_2: String(existingCheckout.leaderId),
+      },
+    };
+  }
+
+  return buildPublicBookingResponse({
+    bookingId: existingCheckout.id,
+    referenceCode: paymentRecord?.orderId,
+    paymentProvider: paymentRecord?.provider,
+    paymentRedirect,
+    duplicate: true,
+  });
 }
 
 function validatePayload(payload) {

@@ -197,6 +197,7 @@ model Booking {
     payment     Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
     status      BookingStatus @default(PENDING)
     additionalNotes String?
+    checkoutAttemptId String? @unique
     createdAt   DateTime      @default(now())
     updatedAt   DateTime      @updatedAt
     deletedAt   DateTime?

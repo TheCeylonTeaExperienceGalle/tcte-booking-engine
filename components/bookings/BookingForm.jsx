@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchWithAuth, AuthError } from "@/lib/apiClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -102,6 +102,8 @@ export default function BookingForm() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const checkoutAttemptIdRef = useRef(null);
+  const submitLockRef = useRef(false);
 
   const sessionsMap = useMemo(() => {
     const map = new Map();
@@ -659,12 +661,17 @@ export default function BookingForm() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (submitLockRef.current) {
+      return;
+    }
+    submitLockRef.current = true;
     setFormError("");
     setSubmissionStatus("idle");
     setSubmissionMessage("");
 
     const validationMessage = validateForm();
     if (validationMessage) {
+      submitLockRef.current = false;
       setFormError(validationMessage);
       return;
     }
@@ -726,9 +733,14 @@ export default function BookingForm() {
       });
     });
 
+    if (!checkoutAttemptIdRef.current) {
+      checkoutAttemptIdRef.current = crypto.randomUUID();
+    }
+
     const payload = {
       leaderId: Number.parseInt(formState.leaderId, 10),
       bookedDate: `${formState.bookedDate}T00:00:00.000Z`,
+      checkoutAttemptId: checkoutAttemptIdRef.current,
       selections: bookingSelections,
       payment: {
         paymentType: formState.paymentType,
@@ -764,6 +776,7 @@ export default function BookingForm() {
         transactionId: "",
         selections: [createSelection()],
       });
+      checkoutAttemptIdRef.current = null;
     } catch (error) {
       const message =
         error instanceof AuthError
@@ -773,6 +786,8 @@ export default function BookingForm() {
       setSubmissionMessage(message);
       setErrorMessage(message);
       setErrorDialogOpen(true);
+    } finally {
+      submitLockRef.current = false;
     }
   }
 

@@ -29,6 +29,7 @@ import {
 } from "libphonenumber-js";
 import metadata from "libphonenumber-js/metadata.min.json";
 import { resolvePaymentPlan } from "@/lib/pricing/booking-pricing";
+import { isValidCheckoutAttemptId } from "@/lib/bookings/checkout-attempt";
 
 // Dummy availability data until the API layer is ready
 const SEASON_AVAILABILITY = {
@@ -130,7 +131,7 @@ export default function BookNow() {
     location: "",
     programIds: [],
     packs: 1,
-    payment: "Full",
+    payment: "Later",
     notes: "",
     promoCode: "",
   });
@@ -138,6 +139,9 @@ export default function BookNow() {
   const [useGlobalSeatCount, setUseGlobalSeatCount] = useState(false);
   const [globalSeatCount, setGlobalSeatCount] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitLockRef = useRef(false);
+  const checkoutAttemptIdRef = useRef(null);
+  const [payHereEnabled, setPayHereEnabled] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [referenceCode, setReferenceCode] = useState("");
   const [programOptions, setProgramOptions] = useState([]);
@@ -151,6 +155,31 @@ export default function BookNow() {
   const [validatedPhoneNumber, setValidatedPhoneNumber] = useState(null);
   const [discountInfo, setDiscountInfo] = useState(null);
   const [discountLoading, setDiscountLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/public/checkout-config")
+      .then((response) => (response.ok ? response.json() : { payHereEnabled: false }))
+      .then((data) => {
+        if (cancelled) return;
+        const enabled = data?.payHereEnabled === true;
+        setPayHereEnabled(enabled);
+        if (!enabled) {
+          setFormData((prev) =>
+            prev.payment === "Later" ? prev : { ...prev, payment: "Later" }
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPayHereEnabled(false);
+          setFormData((prev) => ({ ...prev, payment: "Later" }));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Close calendar when clicking outside
   useEffect(() => {
@@ -1521,10 +1550,20 @@ export default function BookNow() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitLockRef.current || isSubmitting) {
+      return;
+    }
+    submitLockRef.current = true;
+
+    const unlockSubmit = () => {
+      submitLockRef.current = false;
+      setIsSubmitting(false);
+    };
 
     // Validate all fields on single page
     if (formData.programIds.length === 0) {
       alert("Select at least one program before proceeding.");
+      unlockSubmit();
       return;
     }
 
@@ -1532,21 +1571,25 @@ export default function BookNow() {
       alert(
         "Select at least one season, choose activities, and set the seats needed before continuing."
       );
+      unlockSubmit();
       return;
     }
 
     if (!selectedDate) {
       alert("Select a date before confirming your booking.");
+      unlockSubmit();
       return;
     }
 
     if (totalSeatsRequested === 0) {
       alert("Please specify how many seats you need before confirming.");
+      unlockSubmit();
       return;
     }
 
     if (!guestDetailsComplete) {
       alert("Please fill in all guest details before confirming your booking.");
+      unlockSubmit();
       return;
     }
 
@@ -1568,6 +1611,7 @@ export default function BookNow() {
 
       if (!latestPhoneCheck.isValid) {
         alert("Enter a valid phone number or leave it blank before confirming your booking.");
+        unlockSubmit();
         return;
       }
 
@@ -1575,6 +1619,10 @@ export default function BookNow() {
     }
 
     setIsSubmitting(true);
+    submitLockRef.current = true;
+    if (!isValidCheckoutAttemptId(checkoutAttemptIdRef.current)) {
+      checkoutAttemptIdRef.current = crypto.randomUUID();
+    }
 
     try {
       if (!selectedDate) {
@@ -1784,12 +1832,17 @@ export default function BookNow() {
         leaderId,
         bookedDate: bookingDateString,
         additionalNotes: formData.notes,
+        checkoutAttemptId: checkoutAttemptIdRef.current,
         selections: bookingSelections,
         payment: {
-          paymentType: formData.payment,
-          provider: formData.payment === "Later" ? "MANUAL" : "PAYHERE",
+          paymentType: payHereEnabled ? formData.payment : "Later",
+          provider:
+            payHereEnabled && formData.payment !== "Later" ? "PAYHERE" : "MANUAL",
           currency: "USD",
-          method: formData.payment === "Later" ? "Pay Later" : "PayHere Checkout",
+          method:
+            payHereEnabled && formData.payment !== "Later"
+              ? "PayHere Checkout"
+              : "Pay Later",
         },
         customer: {
           name: primaryName,
@@ -1817,11 +1870,12 @@ export default function BookNow() {
         throw new Error(result?.error || "Booking failed. Please try again.");
       }
 
-      if (result.paymentRedirect) {
+      if (result.paymentRedirect && payHereEnabled) {
         submitPayHereRedirect(result.paymentRedirect);
         return;
       }
 
+      checkoutAttemptIdRef.current = null;
       const bookingReference =
         result.referenceCode ??
         (result.bookingId ? `RV-${String(result.bookingId)}` : null);
@@ -1829,9 +1883,12 @@ export default function BookNow() {
       setBookingConfirmed(true);
     } catch (error) {
       console.error("Booking error:", error);
+      submitLockRef.current = false;
       alert(error?.message || "An error occurred. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      if (!submitLockRef.current) {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -2899,16 +2956,25 @@ export default function BookNow() {
                               <SelectValue placeholder="Choose payment option" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Full">Full Payment ({formatPrice(discountedTotalCost)})</SelectItem>
-                              <SelectItem value="Partial">
-                                Partial Payment (Pay 50% now: {formatPrice(partialPlanPreview.amountDueNow)})
-                              </SelectItem>
+                              {payHereEnabled ? (
+                                <>
+                                  <SelectItem value="Full">Full Payment ({formatPrice(discountedTotalCost)})</SelectItem>
+                                  <SelectItem value="Partial">
+                                    Partial Payment (Pay 50% now: {formatPrice(partialPlanPreview.amountDueNow)})
+                                  </SelectItem>
+                                </>
+                              ) : null}
                               <SelectItem value="Later">Pay Later</SelectItem>
                             </SelectContent>
                           </Select>
+                          {!payHereEnabled ? (
+                            <p className="text-sm text-muted-foreground">
+                              Online payment is currently unavailable in this demo. Please select Pay Later.
+                            </p>
+                          ) : null}
                         </div>
 
-                        {formData.payment === "Partial" && (
+                        {payHereEnabled && formData.payment === "Partial" && (
                           <div className="grid gap-2 p-4 bg-secondary/20 rounded-lg">
                             <p className="text-sm font-medium">Partial Payment</p>
                             <div className="flex justify-between text-sm">
@@ -2938,7 +3004,7 @@ export default function BookNow() {
                       >
                         {isSubmitting ? (
                           <span className="flex items-center gap-2">
-                            <span className="animate-spin">⏳</span> Processing...
+                            <span className="animate-spin">⏳</span> Processing booking...
                           </span>
                         ) : (
                           <span className="flex items-center gap-2">

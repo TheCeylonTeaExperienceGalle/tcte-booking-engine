@@ -38,6 +38,7 @@ describe("API path classification", () => {
 
   it("keeps intended public routes public", () => {
     expect(classifyApiPath("/api/public/programs")).toBe(API_PATH_CLASS.PUBLIC);
+    expect(classifyApiPath("/api/public/checkout-config")).toBe(API_PATH_CLASS.PUBLIC);
     expect(classifyApiPath("/api/public/payhere/notify")).toBe(API_PATH_CLASS.PUBLIC);
     expect(classifyApiPath("/api/discount-rules/calculate")).toBe(API_PATH_CLASS.PUBLIC);
   });
@@ -59,6 +60,7 @@ describe("API path classification", () => {
 
   it("does not rate-limit PayHere notify", () => {
     expect(shouldApplyPublicRateLimit("/api/public/payhere/notify")).toBe(false);
+    expect(shouldApplyPublicRateLimit("/api/public/checkout-config")).toBe(true);
     expect(shouldApplyPublicRateLimit("/api/booking")).toBe(true);
     expect(shouldApplyPublicRateLimit("/api/auth/login")).toBe(true);
   });
