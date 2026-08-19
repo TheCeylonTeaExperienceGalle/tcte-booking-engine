@@ -58,3 +58,6 @@ logs/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# One-off staging bootstrap utility (must stay untracked)
+scripts/bootstrap-staging.js
