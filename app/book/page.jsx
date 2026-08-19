@@ -689,16 +689,17 @@ export default function BookNow() {
     };
   }, [seasonSelections, programOptions, currentStage, guestDetails]);
 
-  const { totalCost, sessionTypeTotal } = useMemo(
+  const { totalCost } = useMemo(
     () => calculateCostBreakdown(),
     [calculateCostBreakdown]
   );
 
-  // Fetch discount rules from database when selections change
+  // Fetch the authoritative server quote when selections change.
   useEffect(() => {
     const fetchDiscount = async () => {
       const selectedSessionIds = [];
       const sessionTypeSelections = {};
+      const quoteSelections = [];
       let selectedProgramId = null;
 
       Object.entries(seasonSelections).forEach(([seasonId, selection]) => {
@@ -710,6 +711,8 @@ export default function BookNow() {
         if (!selectedProgramId && season.programId) {
           selectedProgramId = season.programId;
         }
+
+        const seatsRequested = Number.parseInt(selection.seatsRequested, 10) || 0;
 
         Object.entries(selection.activities ?? {}).forEach(([activityName, activityState]) => {
           if (!activityState?.selected) return;
@@ -723,6 +726,12 @@ export default function BookNow() {
           if (selectedTypeIds.length > 0) {
             sessionTypeSelections[activity.id] = selectedTypeIds[0];
           }
+
+          quoteSelections.push({
+            sessionId: activity.id,
+            sessionTypeId: selectedTypeIds[0] ? Number(selectedTypeIds[0]) : null,
+            seatsRequested,
+          });
         });
       });
 
@@ -740,6 +749,7 @@ export default function BookNow() {
             programId: selectedProgramId,
             sessionIds: selectedSessionIds,
             sessionTypeSelections,
+            selections: quoteSelections,
           }),
         });
 
@@ -760,16 +770,12 @@ export default function BookNow() {
     fetchDiscount();
   }, [seasonSelections, availabilityForDate]);
 
-  // Calculate discounted total cost
-  // Calculate final total cost with discount applied
-  // Use finalTotal from the discount API (per-seat) multiplied by seats
-  // This ensures the amount matches what the payment gateway will charge
   const discountedTotalCost = useMemo(() => {
-    if (!discountInfo?.appliedRule) return totalCost;
-    const finalTotalPerSeat = Number(discountInfo.finalTotal) || 0;
-    const discountedSessionTotal = Math.max(0, finalTotalPerSeat * totalSeatsRequested);
-    return discountedSessionTotal + sessionTypeTotal;
-  }, [totalCost, discountInfo, totalSeatsRequested, sessionTypeTotal]);
+    if (discountInfo && Number.isFinite(Number(discountInfo.finalTotal))) {
+      return Number(discountInfo.finalTotal);
+    }
+    return totalCost;
+  }, [totalCost, discountInfo]);
 
   const paymentBreakdown = useMemo(() => {
     const entries = [];
@@ -2861,7 +2867,7 @@ export default function BookNow() {
                                   {discountInfo.appliedRule.name}
                                 </span>
                                 <span className="text-emerald-600 font-medium">
-                                  -{formatPrice((Number(discountInfo.discountAmount) || 0) * totalSeatsRequested)}
+                                  -{formatPrice(Number(discountInfo.discountAmount) || 0)}
                                 </span>
                               </div>
                               {discountInfo.appliedRule.description && (

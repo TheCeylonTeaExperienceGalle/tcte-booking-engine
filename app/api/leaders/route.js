@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { jsonAuthError, requireAdmin } from "@/lib/security/auth";
+import { buildLeaderSearchWhere } from "@/lib/security/leader-search";
 
 export const dynamic = "force-dynamic";
 
@@ -25,17 +26,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
 
-    const where = {
-      deletedAt: null,
-    };
-
-    if (query) {
-      where.OR = [
-        { name: { contains: query, mode: "insensitive" } },
-        { email: { contains: query, mode: "insensitive" } },
-        { promoteCode: { contains: query, mode: "insensitive" } },
-      ];
-    }
+    const where = buildLeaderSearchWhere(query);
 
     const leaders = await prisma.leader.findMany({
       where,

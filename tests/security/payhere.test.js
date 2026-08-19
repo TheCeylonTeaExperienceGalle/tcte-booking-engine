@@ -79,6 +79,13 @@ describe("PayHere webhook helpers", () => {
     expect(canTransitionPaymentStatus("SUCCESS", "PENDING")).toBe(false);
   });
 
+  it("maps failed and cancelled PayHere statuses away from CONFIRMED", () => {
+    expect(bookingStatusFromPaymentStatus("FAILED")).toBe("CANCELLED");
+    expect(bookingStatusFromPaymentStatus("CANCELED")).toBe("CANCELLED");
+    expect(bookingStatusFromPaymentStatus("SUCCESS")).toBe("CONFIRMED");
+    expect(bookingStatusFromPaymentStatus("PENDING")).toBe("PENDING");
+  });
+
   it("does not store a full gateway payload in metadata", () => {
     const metadata = sanitizeNotifyMetadata(
       {},

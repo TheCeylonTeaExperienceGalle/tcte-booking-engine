@@ -6,10 +6,14 @@ import {
   getSessionAvailability,
   lockSessions,
 } from "@/lib/availability";
+import {
+  calculateBookingPricing,
+  PricingError,
+} from "@/lib/pricing/booking-pricing";
+import { appendOrderIdToUrl } from "@/lib/payments/payhere-urls";
 
 const PAYMENT_TYPES = new Set(["Full", "Partial", "Later"]);
 const PAYMENT_PROVIDERS = new Set(["MANUAL", "PAYHERE"]);
-const DEFAULT_CURRENCY = "USD";
 const PAYHERE_DEFAULT_ACTION_URL =
   process.env.PAYHERE_CHECKOUT_URL ||
   (process.env.NODE_ENV === "production"
@@ -78,13 +82,9 @@ export async function POST(request) {
 
     const {
       paymentType,
-      amount: partialAmount,
       provider: rawProvider,
       method,
-      full_payment_price,
       transactionId,
-      currency: paymentCurrency,
-      orderId: providedOrderId,
     } = payment;
 
     const normalizedProvider =
@@ -160,110 +160,46 @@ export async function POST(request) {
       );
     }
 
-    let pricing;
+    const programId = sessions[0]?.programId;
+    const discountRules = programId
+      ? await prisma.discountRule.findMany({
+          where: {
+            programId,
+            isActive: true,
+            deletedAt: null,
+          },
+          orderBy: { priority: "desc" },
+        })
+      : [];
 
+    let pricing;
     try {
-      pricing = calculatePrice(selections, sessionMap);
+      pricing = calculateBookingPricing({
+        selections,
+        sessionMap,
+        discountRules,
+        paymentType,
+        provider: paymentProvider,
+      });
     } catch (pricingError) {
+      const status =
+        pricingError instanceof PricingError ? pricingError.status : 400;
       return NextResponse.json(
         { success: false, error: pricingError.message },
-        { status: 400 }
+        { status }
       );
     }
 
-    const totalBaseAmount = pricing.reduce(
-      (sum, item) => sum + item.sessionBasePrice * item.seatsRequested,
-      0
-    );
-    const totalAddOnAmount = pricing.reduce(
-      (sum, item) => sum + item.sessionTypePrice * item.seatsRequested,
-      0
-    );
-    const totalAmount = totalBaseAmount + totalAddOnAmount;
-    const perSeatBaseCombinationTotal = pricing.reduce(
-      (sum, item) => sum + item.sessionBasePrice,
-      0
-    );
-    const seatCounts = selections.map((selection) => selection.seatsRequested || 0);
-    const seatsEligibleForDiscount =
-      seatCounts.length > 0 ? Math.min(...seatCounts) : 0;
+    const {
+      fullTotal,
+      amountDueNow,
+      balance,
+      paymentStatus,
+      bookingStatus,
+      currency,
+    } = pricing;
 
-    let discountAmount = 0;
-    const programId = sessions[0]?.programId;
-
-    if (programId && seatsEligibleForDiscount > 0) {
-      const discountRules = await prisma.discountRule.findMany({
-        where: {
-          programId,
-          isActive: true,
-          deletedAt: null,
-        },
-        orderBy: { priority: "desc" },
-      });
-
-      const selectedSessionIds = selections
-        .map((selection) => selection.sessionId)
-        .sort((a, b) => a - b);
-
-      for (const rule of discountRules) {
-        const ruleSessionIds = JSON.parse(rule.sessionIds || "[]")
-          .map((value) => Number(value))
-          .filter((value) => !Number.isNaN(value))
-          .sort((a, b) => a - b);
-
-        const isExactMatch =
-          ruleSessionIds.length === selectedSessionIds.length &&
-          ruleSessionIds.every((id, idx) => id === selectedSessionIds[idx]);
-
-        if (isExactMatch) {
-          if (rule.discountType === "PERCENTAGE") {
-            const perSeatDiscount =
-              (perSeatBaseCombinationTotal * rule.discountValue) / 100;
-            discountAmount = perSeatDiscount * seatsEligibleForDiscount;
-          } else {
-            const perSeatDiscount = Math.max(
-              0,
-              perSeatBaseCombinationTotal - rule.discountValue
-            );
-            discountAmount = perSeatDiscount * seatsEligibleForDiscount;
-          }
-          break; // First matching rule (highest priority)
-        }
-      }
-    }
-
-    // Apply discounts only to the session base total, then add session type add-ons
-    const discountedBaseAmount = Math.max(0, totalBaseAmount - discountAmount);
-    const finalTotalAmount = discountedBaseAmount + totalAddOnAmount;
-
-    let paidAmount = finalTotalAmount;
-
-    // Use passed amount if available (for both partial and full payments)
-    if (typeof partialAmount === 'number') {
-      paidAmount = partialAmount;
-    }
-
-    if (paymentType === "Partial") {
-        // Ensure paid amount doesn't exceed total
-        if (paidAmount > finalTotalAmount) paidAmount = finalTotalAmount;
-        // Ensure paid amount is not negative
-        if (paidAmount < 0) paidAmount = 0;
-    }
-
-    if (paymentType === "Later") {
-      paidAmount = 0;
-    }
-
-    // Calculate balance: total price minus what's being paid now
-    const totalPrice = full_payment_price ?? finalTotalAmount;
-    const balance = totalPrice - paidAmount;
-
-    const currency =
-      typeof paymentCurrency === "string" && paymentCurrency.trim().length > 0
-        ? paymentCurrency.trim().toUpperCase()
-        : DEFAULT_CURRENCY;
-
-    const resolvedOrderId = providedOrderId?.trim() || generatePayHereOrderId(leaderId);
+    const resolvedOrderId = generatePayHereOrderId(leaderId);
 
     const paymentMethodName =
       paymentProvider === "PAYHERE"
@@ -288,8 +224,8 @@ export async function POST(request) {
             const paymentRecord = await tx.payment.create({
               data: {
                 provider: paymentProvider,
-                status: (paymentProvider === "PAYHERE" || paymentType === "Later") ? "PENDING" : "SUCCESS",
-                amount: paidAmount,
+                status: paymentStatus,
+                amount: amountDueNow,
                 currency,
                 method: paymentMethodName,
                 orderId: resolvedOrderId,
@@ -300,16 +236,15 @@ export async function POST(request) {
               },
             });
 
-            //fix the amount bug here
             const bookingRecord = await tx.booking.create({
               data: {
                 leaderId,
                 bookedDate: bookingDate,
-                paymentType: (paymentType === "Partial" || paymentType === "Later") ? paymentType : "Full",
-                amount: full_payment_price,
-                balance: balance,
+                paymentType: pricing.paymentType,
+                amount: fullTotal,
+                balance,
                 paymentId: paymentRecord.id,
-                status: "PENDING",
+                status: bookingStatus,
                 additionalNotes: additionalNotes,
               },
             });
@@ -334,7 +269,7 @@ export async function POST(request) {
               bookingRecord.id,
               leaderId,
               totalSeats,
-              finalTotalAmount
+              fullTotal
             );
 
             return { bookingRecord, paymentRecord, commissionRecord };
@@ -383,9 +318,14 @@ export async function POST(request) {
 
       const itemsLabel = buildPayHereItems(selections, sessionMap);
 
-      // Append order_id so the result page can look up stored payment status (read-only).
-      const returnUrlWithOrder = `${payHereConfig.returnUrl}&order_id=${paymentRecord.orderId}`;
-      const cancelUrlWithOrder = `${payHereConfig.cancelUrl}&order_id=${paymentRecord.orderId}`;
+      const returnUrlWithOrder = appendOrderIdToUrl(
+        payHereConfig.returnUrl,
+        paymentRecord.orderId
+      );
+      const cancelUrlWithOrder = appendOrderIdToUrl(
+        payHereConfig.cancelUrl,
+        paymentRecord.orderId
+      );
 
       paymentRedirect = {
         actionUrl: payHereConfig.actionUrl,
@@ -613,50 +553,6 @@ async function validateAvailability(tx, bookingRange, selections, sessionMap) {
   }
 }
 
-function calculatePrice(selections, sessionMap) {
-  return selections.map((selection) => {
-    const session = sessionMap.get(selection.sessionId);
-
-    if (!session) {
-      throw new HttpError(`Session ${selection.sessionId} not found`);
-    }
-
-    const sessionBasePrice = session.specialPrice ?? session.price ?? 0;
-    let sessionTypePrice = 0;
-
-    if (selection.sessionTypeId) {
-      const sessionType = session.sessionTypes.find(
-        (type) => type.id === selection.sessionTypeId
-      );
-
-      if (!sessionType) {
-        throw new HttpError(
-          `Session type ${selection.sessionTypeId} does not belong to session ${selection.sessionId}`
-        );
-      }
-
-      sessionTypePrice = sessionType.specialPrice ?? sessionType.price ?? 0;
-    }
-
-    const unitPrice = sessionBasePrice + sessionTypePrice;
-
-    if (unitPrice === null || unitPrice === undefined) {
-      throw new HttpError(`Price not configured for session ${selection.sessionId}`);
-    }
-
-    const total = unitPrice * selection.seatsRequested;
-
-    return {
-      sessionId: selection.sessionId,
-      sessionTypeId: selection.sessionTypeId ?? null,
-      sessionBasePrice,
-      sessionTypePrice,
-      unitPrice,
-      seatsRequested: selection.seatsRequested,
-      total,
-    };
-  });
-}
 
 async function createCustomerRecords(tx, leaderId, selections) {
   const selectionCustomerIds = [];

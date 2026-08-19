@@ -8,7 +8,8 @@
     "start": "next start -p 3020",
     "lint": "eslint",
     "test": "vitest run",
-    "test:synthetic": "node tests/security/synthetic-runtime-qa.mjs"
+    "test:synthetic": "node tests/security/synthetic-runtime-qa.mjs",
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
