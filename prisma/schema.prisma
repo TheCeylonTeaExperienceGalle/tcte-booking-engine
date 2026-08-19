@@ -1,0 +1,347 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id            String         @id @default(cuid())
+    email         String         @unique
+    password      String
+    name          String?
+    role          String         @default("user")
+    createdAt     DateTime       @default(now())
+    updatedAt     DateTime       @updatedAt
+    refreshTokens RefreshToken[]
+
+    @@map("users")
+}
+
+model RefreshToken {
+    id          String   @id @default(cuid())
+    hashedToken String   @unique
+    userId      String
+    user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    revoked     Boolean  @default(false)
+    expiresAt   DateTime
+    createdAt   DateTime @default(now())
+
+    @@index([userId])
+    @@index([hashedToken])
+    @@map("refresh_tokens")
+}
+
+enum LeaderRole {
+    USER
+    LEADER
+}
+
+enum LeaderStatus {
+    ACTIVE
+    DEACTIVATED
+}
+
+model Leader {
+    id          Int          @id @default(autoincrement())
+    name        String
+    email       String       @unique
+    contact     String?
+    promoteCode String?      @unique
+    role        LeaderRole   @default(USER)
+    status      LeaderStatus @default(ACTIVE)
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+    deletedAt   DateTime?
+
+    customers   Customer[]
+    bookings    Booking[]
+    commissions Commission[]
+
+    @@index([promoteCode])
+    @@map("leaders")
+}
+
+model Customer {
+    id           Int           @id @default(autoincrement())
+    leaderId     Int
+    leader       Leader        @relation(fields: [leaderId], references: [id], onDelete: Cascade)
+    name         String
+    email        String
+    phone        String?
+    nic          String?
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @updatedAt
+    deletedAt    DateTime?
+    bookingItems BookingItem[]
+
+    @@map("customers")
+}
+
+model Location {
+    id        Int       @id @default(autoincrement())
+    name      String
+    address   String?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    programs Program[]
+
+    @@map("locations")
+}
+
+model Program {
+    id          Int       @id @default(autoincrement())
+    title       String
+    description String?
+    startTime   DateTime  @db.Time
+    endTime     DateTime  @db.Time
+    locationId  Int
+    location    Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+    seats       Int
+    isActive    Boolean   @default(true)
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    deletedAt   DateTime?
+
+    sessions      Session[]
+    discountRules DiscountRule[]
+
+    @@map("programs")
+}
+
+model Session {
+    id        Int     @id @default(autoincrement())
+    programId Int
+    program   Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+    name      String
+    startTime DateTime  @db.Time
+    endTime   DateTime  @db.Time
+    price     Float?
+    specialPrice Float?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    sessionTypes SessionType[]
+    bookingItems BookingItem[]
+
+    @@map("sessions")
+}
+
+model SessionType {
+    id        Int     @id @default(autoincrement())
+    sessionId Int
+    session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+    name      String
+    price     Float
+    specialPrice Float?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    bookingItems BookingItem[]
+
+    @@map("session_types")
+}
+
+model Payment {
+    id                Int              @id @default(autoincrement())
+    provider          PaymentProvider  @default(MANUAL)
+    status            PaymentStatus    @default(PENDING)
+    amount            Float
+    currency          String           @default("LKR")
+    method            String?
+    orderId           String?          @unique
+    transactionId     String?          @unique
+    payherePaymentId  String?          @unique
+    payhereStatusCode Int?
+    payhereStatusMsg  String?
+    payhereMd5Sig     String?
+    metadata          Json?
+    createdAt         DateTime         @default(now())
+    updatedAt         DateTime         @updatedAt
+    deletedAt         DateTime?
+
+    bookings Booking[]
+
+    @@map("payments")
+}
+
+enum PaymentProvider {
+    MANUAL
+    PAYHERE
+}
+
+enum PaymentStatus {
+    PENDING
+    SUCCESS
+    FAILED
+    CANCELED
+}
+
+model Booking {
+    id          Int           @id @default(autoincrement())
+    leaderId    Int
+    leader      Leader        @relation(fields: [leaderId], references: [id], onDelete: Cascade)
+    bookedDate  DateTime /// The actual date they want to attend (same day for all items)
+    paymentType PaymentType   @default(Full)
+    amount      Float
+    balance     Float
+    paymentId   Int
+    payment     Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+    status      BookingStatus @default(PENDING)
+    additionalNotes String?
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+    deletedAt   DateTime?
+
+    items      BookingItem[]
+    refunds    Refund[]
+    history    BookingHistory[]
+    commission Commission?
+
+    @@map("bookings")
+}
+
+model Refund {
+    id          String       @id @default(cuid())
+    bookingId   Int
+    booking     Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+    amount      Float
+    reason      String?
+    status      RefundStatus @default(PENDING)
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+
+    @@map("refunds")
+}
+
+enum RefundStatus {
+    PENDING
+    PROCESSED
+    FAILED
+}
+
+model BookingHistory {
+    id             Int           @id @default(autoincrement())
+    bookingId      Int
+    booking        Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+    action         String        /// RESCHEDULE, CANCEL, REFUND
+    previousDate   DateTime?
+    newDate        DateTime?
+    previousStatus BookingStatus?
+    newStatus      BookingStatus?
+    reason         String?
+    createdAt      DateTime      @default(now())
+
+    @@map("booking_history")
+}
+
+model BookingItem {
+    id        Int     @id @default(autoincrement())
+    bookingId Int
+    booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+    sessionId Int
+    session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+    sessionTypeId Int?
+    sessionType   SessionType? @relation(fields: [sessionTypeId], references: [id])
+
+    customerId Int?
+    customer   Customer? @relation(fields: [customerId], references: [id])
+
+    date DateTime /// same as booking.bookedDate
+    quantity Int @default(1)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("booking_items")
+}
+
+enum BookingStatus {
+    PENDING
+    PAID
+    CONFIRMED
+    CANCELLED
+}
+
+enum PaymentType {
+    Full
+    Partial
+    Later
+}
+
+// Commission Rules - Define commission percentages based on seat ranges
+model CommissionRule {
+    id              Int       @id @default(autoincrement())
+    minSeats        Int       // Minimum seats for this rule
+    maxSeats        Int?      // Maximum seats (null means unlimited)
+    commissionRate  Float     // Percentage (e.g., 10.0 for 10%)
+    isActive        Boolean   @default(true)
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
+    deletedAt       DateTime?
+
+    @@map("commission_rules")
+}
+
+// Commission record for each booking made through a leader
+model Commission {
+    id              Int               @id @default(autoincrement())
+    bookingId       Int               @unique
+    booking         Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+    leaderId        Int
+    leader          Leader            @relation(fields: [leaderId], references: [id], onDelete: Cascade)
+    totalSeats      Int               // Total seats in the booking
+    bookingAmount   Float             // Original booking amount
+    commissionRate  Float             // Applied commission rate percentage
+    commissionAmount Float            // Calculated commission amount
+    paymentStatus   CommissionPaymentStatus @default(PENDING)
+    paidAt          DateTime?
+    paidAmount      Float?
+    notes           String?
+    createdAt       DateTime          @default(now())
+    updatedAt       DateTime          @updatedAt
+
+    @@index([leaderId])
+    @@index([paymentStatus])
+    @@map("commissions")
+}
+
+enum CommissionPaymentStatus {
+    PENDING
+    PAID
+    PARTIALLY_PAID
+}
+
+// Discount Rules - Define discounts based on session selection combinations
+model DiscountRule {
+    id              Int       @id @default(autoincrement())
+    programId       Int
+    program         Program   @relation(fields: [programId], references: [id], onDelete: Cascade)
+    name            String    // e.g., "All Sessions Discount", "Two Sessions Combo"
+    description     String?
+    sessionIds      String    // JSON array of session IDs that trigger this discount e.g., "[1,2,3]"
+    discountType    DiscountType @default(PERCENTAGE)
+    discountValue   Float     // Percentage or fixed amount
+    priority        Int       @default(0) // Higher priority rules are applied first
+    isActive        Boolean   @default(true)
+    createdAt       DateTime  @default(now())
+    updatedAt       DateTime  @updatedAt
+    deletedAt       DateTime?
+
+    @@index([programId])
+    @@map("discount_rules")
+}
+
+enum DiscountType {
+    PERCENTAGE
+    FIXED_AMOUNT
+}
