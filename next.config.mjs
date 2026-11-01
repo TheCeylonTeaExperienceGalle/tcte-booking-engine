@@ -15,6 +15,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },
+  serverExternalPackages: ["@prisma/client", "@prisma/adapter-mariadb", "mariadb"],
   images: {
     remotePatterns: [
       {

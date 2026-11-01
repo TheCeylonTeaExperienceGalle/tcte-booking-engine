@@ -3,9 +3,9 @@
  * Run with: node scripts/test-endpoints.js
  */
 
-const { PrismaClient } = require("@prisma/client");
 const crypto = require("crypto");
-const prisma = new PrismaClient();
+
+let prisma;
 
 const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3020";
 
@@ -1136,4 +1136,10 @@ async function runAllTests() {
   console.log("================================================================================");
 }
 
-runAllTests();
+async function start() {
+  const { createPrismaClient } = await import("../lib/create-client.mjs");
+  prisma = createPrismaClient();
+  await runAllTests();
+}
+
+start();

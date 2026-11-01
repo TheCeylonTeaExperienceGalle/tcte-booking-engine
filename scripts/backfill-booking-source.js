@@ -16,8 +16,7 @@
  *    -> Classified as "ADMIN".
  */
 
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+let prisma;
 
 async function backfillBookingSource() {
   console.log("=== Starting Booking Source Backfill ===");
@@ -91,11 +90,17 @@ async function backfillBookingSource() {
   console.log(`\n=== Backfill Completed: ${updatedCount} booking(s) updated out of ${bookings.length} ===\n`);
 }
 
-backfillBookingSource()
-  .catch((err) => {
-    console.error("Backfill failed:", err);
-    process.exit(1);
-  })
-  .finally(async () => {
+async function start() {
+  const { createPrismaClient } = await import("../lib/create-client.mjs");
+  prisma = createPrismaClient();
+  try {
+    await backfillBookingSource();
+  } finally {
     await prisma.$disconnect();
-  });
+  }
+}
+
+start().catch((err) => {
+  console.error("Backfill failed:", err);
+  process.exit(1);
+});

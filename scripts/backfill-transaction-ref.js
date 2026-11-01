@@ -3,8 +3,7 @@
  * Replaces dummy "TEST-*" references or nulls on existing bookings with clean, sequential "TXN-000001", "TXN-000002", etc.
  */
 
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+let prisma;
 
 async function backfillTransactionRefs() {
   console.log("=== Starting Transaction Reference Backfill ===");
@@ -66,11 +65,17 @@ async function backfillTransactionRefs() {
   console.log(`\n=== Backfill Completed: ${updatedCount} payment(s) updated out of ${payments.length} ===\n`);
 }
 
-backfillTransactionRefs()
-  .catch((err) => {
-    console.error("Backfill failed:", err);
-    process.exit(1);
-  })
-  .finally(async () => {
+async function start() {
+  const { createPrismaClient } = await import("../lib/create-client.mjs");
+  prisma = createPrismaClient();
+  try {
+    await backfillTransactionRefs();
+  } finally {
     await prisma.$disconnect();
-  });
+  }
+}
+
+start().catch((err) => {
+  console.error("Backfill failed:", err);
+  process.exit(1);
+});

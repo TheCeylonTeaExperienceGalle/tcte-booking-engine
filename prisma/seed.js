@@ -1,11 +1,13 @@
 /* Seed script to insert initial users, locations, programs, sessions, and session types */
 // Uses CommonJS to avoid ESM issues since package.json has no "type": "module"
-const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 
-const prisma = new PrismaClient();
+let prisma;
 
 async function main() {
+  const { createPrismaClient } = await import("../lib/create-client.mjs");
+  prisma = createPrismaClient();
+
   // Seed roles
   const adminRole = await prisma.role.upsert({
     where: { name: "admin" },
@@ -126,10 +128,10 @@ async function main() {
 main()
   .then(async () => {
     console.log("Seeded users successfully.");
-    await prisma.$disconnect();
+    await prisma?.$disconnect();
   })
   .catch(async (e) => {
     console.error("Seeding failed:", e);
-    await prisma.$disconnect();
+    await prisma?.$disconnect();
     process.exit(1);
   });

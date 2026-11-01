@@ -1,0 +1,16 @@
+import { config } from "dotenv";
+import { defineConfig, env } from "prisma/config";
+
+config({ path: ".env" });
+config({ path: ".env.local" });
+
+export default defineConfig({
+  schema: "prisma/schema.prisma",
+  migrations: {
+    path: "prisma/migrations",
+    seed: "node prisma/seed.js",
+  },
+  datasource: {
+    url: env("DATABASE_URL"),
+  },
+});
