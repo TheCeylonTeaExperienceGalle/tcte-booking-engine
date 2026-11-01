@@ -193,7 +193,7 @@ export default function LocationList() {
         <div>
           <h2
             className="text-3xl font-bold tracking-tight"
-            style={{ color: "#767014" }}
+            style={{ color: "#1A3D1A" }}
           >
             Locations
           </h2>
@@ -209,7 +209,7 @@ export default function LocationList() {
               setFormOpen(true);
             }}
             style={{
-              background: "linear-gradient(to right, #767014, #C5BF81)",
+              background: "linear-gradient(to right, #1A3D1A, #D3AE24)",
               color: "#ffffff",
             }}
           >
@@ -229,8 +229,8 @@ export default function LocationList() {
         <div
           className="p-4 rounded-md border"
           style={{
-            backgroundColor: "#C5BF81",
-            borderColor: "#767014",
+            backgroundColor: "#D3AE24",
+            borderColor: "#1A3D1A",
             color: "#000000",
           }}
         >
@@ -238,9 +238,9 @@ export default function LocationList() {
         </div>
       )}
 
-      <Card className="border-2" style={{ borderColor: "#C5BF81" }}>
+      <Card className="border-2" style={{ borderColor: "#D3AE24" }}>
         <CardHeader>
-          <CardTitle style={{ color: "#767014" }}>All Locations</CardTitle>
+          <CardTitle style={{ color: "#1A3D1A" }}>All Locations</CardTitle>
           <CardDescription style={{ color: "#000000", opacity: 0.7 }}>
             A list of all locations configured in the system.
           </CardDescription>
@@ -264,22 +264,22 @@ export default function LocationList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead style={{ color: "#767014", fontWeight: 600 }}>
+                  <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>
                     Name
                   </TableHead>
-                  <TableHead style={{ color: "#767014", fontWeight: 600 }}>
+                  <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>
                     Address
                   </TableHead>
-                  <TableHead style={{ color: "#767014", fontWeight: 600 }}>
+                  <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>
                     Status
                   </TableHead>
-                  <TableHead style={{ color: "#767014", fontWeight: 600 }}>
+                  <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>
                     Usage
                   </TableHead>
                   {canWrite && (
                     <TableHead
                       className="text-right"
-                      style={{ color: "#767014", fontWeight: 600 }}
+                      style={{ color: "#1A3D1A", fontWeight: 600 }}
                     >
                       Actions
                     </TableHead>
@@ -293,7 +293,7 @@ export default function LocationList() {
                       <div className="flex items-center gap-2">
                         <MapPin
                           className="h-4 w-4"
-                          style={{ color: "#767014" }}
+                          style={{ color: "#1A3D1A" }}
                         />
                         <span style={{ color: "#000000" }}>{location.name}</span>
                       </div>
@@ -356,7 +356,7 @@ export default function LocationList() {
                               setEditingLocation(location);
                               setFormOpen(true);
                             }}
-                            style={{ color: "#767014" }}
+                            style={{ color: "#1A3D1A" }}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -402,18 +402,18 @@ export default function LocationList() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent
           className="border-2"
-          style={{ borderColor: "#C5BF81" }}
+          style={{ borderColor: "#D3AE24" }}
         >
           <AlertDialogHeader>
             <div
               className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-              style={{ backgroundColor: "rgba(197, 191, 129, 0.2)" }}
+              style={{ backgroundColor: "rgba(211, 174, 36, 0.2)" }}
             >
-              <AlertTriangle className="h-8 w-8" style={{ color: "#767014" }} />
+              <AlertTriangle className="h-8 w-8" style={{ color: "#1A3D1A" }} />
             </div>
             <AlertDialogTitle
               className="text-center text-xl"
-              style={{ color: "#767014" }}
+              style={{ color: "#1A3D1A" }}
             >
               Delete Location?
             </AlertDialogTitle>
@@ -428,14 +428,14 @@ export default function LocationList() {
           <AlertDialogFooter className="sm:justify-center gap-3">
             <AlertDialogCancel
               className="border-2"
-              style={{ borderColor: "#C5BF81", color: "#767014" }}
+              style={{ borderColor: "#D3AE24", color: "#1A3D1A" }}
             >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="border-0"
-              style={{ backgroundColor: "#767014", color: "#ffffff" }}
+              style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}
             >
               {actionLoadingId === locationToDelete?.id ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
@@ -455,7 +455,7 @@ export default function LocationList() {
       >
         <AlertDialogContent
           className="border-2"
-          style={{ borderColor: "#C5BF81" }}
+          style={{ borderColor: "#D3AE24" }}
         >
           <AlertDialogHeader>
             <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-amber-100">
@@ -498,20 +498,20 @@ export default function LocationList() {
       <AlertDialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
         <AlertDialogContent
           className="border-2"
-          style={{ borderColor: "#C5BF81" }}
+          style={{ borderColor: "#D3AE24" }}
         >
           <AlertDialogHeader>
             <div
               className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
               style={{
-                background: "linear-gradient(135deg, #767014, #C5BF81)",
+                background: "linear-gradient(135deg, #1A3D1A, #D3AE24)",
               }}
             >
               <CheckCircle className="h-8 w-8" style={{ color: "#ffffff" }} />
             </div>
             <AlertDialogTitle
               className="text-center text-xl"
-              style={{ color: "#767014" }}
+              style={{ color: "#1A3D1A" }}
             >
               Success!
             </AlertDialogTitle>
@@ -525,7 +525,7 @@ export default function LocationList() {
           <AlertDialogFooter className="sm:justify-center">
             <AlertDialogAction
               style={{
-                background: "linear-gradient(135deg, #767014, #C5BF81)",
+                background: "linear-gradient(135deg, #1A3D1A, #D3AE24)",
                 color: "#ffffff",
               }}
             >
@@ -540,18 +540,18 @@ export default function LocationList() {
       <AlertDialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
         <AlertDialogContent
           className="border-2"
-          style={{ borderColor: "#C5BF81" }}
+          style={{ borderColor: "#D3AE24" }}
         >
           <AlertDialogHeader>
             <div
               className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-              style={{ backgroundColor: "rgba(197, 191, 129, 0.3)" }}
+              style={{ backgroundColor: "rgba(211, 174, 36, 0.3)" }}
             >
-              <XCircle className="h-8 w-8" style={{ color: "#767014" }} />
+              <XCircle className="h-8 w-8" style={{ color: "#1A3D1A" }} />
             </div>
             <AlertDialogTitle
               className="text-center text-xl"
-              style={{ color: "#767014" }}
+              style={{ color: "#1A3D1A" }}
             >
               Action Prohibited or Failed
             </AlertDialogTitle>
@@ -564,7 +564,7 @@ export default function LocationList() {
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
             <AlertDialogAction
-              style={{ backgroundColor: "#767014", color: "#ffffff" }}
+              style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}
             >
               Dismiss
             </AlertDialogAction>

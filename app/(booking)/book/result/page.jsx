@@ -125,7 +125,7 @@ export default async function BookingResultPage({ searchParams }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,_#fef7ed,_#f1f5f9)] dark:bg-slate-950">
+    <div className="flex min-h-screen flex-col bg-[#F9F6F0]">
       <BookingHeader />
       <main className="flex flex-1 items-center justify-center px-4 py-16">
         <Card className="w-full max-w-2xl border border-white/60 bg-white/90 backdrop-blur-lg shadow-[0_25px_70px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-900/70">
@@ -151,7 +151,7 @@ export default async function BookingResultPage({ searchParams }) {
               <Button asChild variant="outline" className="bg-white/80 backdrop-blur">
                 <Link href="/book">Book another experience</Link>
               </Button>
-              <Button asChild className="bg-gradient-to-r from-emerald-600 to-amber-500 text-white shadow-lg shadow-emerald-600/30">
+              <Button asChild className="rounded-sm bg-[#2D6A2D] text-white shadow-md hover:bg-[#1A3D1A]">
                 <a href="https://www.theceylonteaexperience.com">Return home</a>
               </Button>
             </div>

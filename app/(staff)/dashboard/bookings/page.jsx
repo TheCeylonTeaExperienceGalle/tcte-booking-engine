@@ -362,7 +362,7 @@ export default function BookingsPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: "#767014" }}>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: "#1A3D1A" }}>
             Bookings
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -371,12 +371,12 @@ export default function BookingsPage() {
         </div>
         <div className="flex items-center gap-3">
           {/* View Mode Toggle */}
-          <div className="flex items-center rounded-lg border p-1 bg-muted/40" style={{ borderColor: "#C5BF81" }}>
+          <div className="flex items-center rounded-lg border p-1 bg-muted/40" style={{ borderColor: "#D3AE24" }}>
             <Button
               variant={viewMode === "list" ? "secondary" : "ghost"}
               size="sm"
               onClick={() => setViewMode("list")}
-              className={`gap-1.5 h-8 text-xs font-semibold ${viewMode === "list" ? "shadow-sm bg-white text-[#767014]" : ""}`}
+              className={`gap-1.5 h-8 text-xs font-semibold ${viewMode === "list" ? "shadow-sm bg-white text-[#1A3D1A]" : ""}`}
             >
               <List className="h-4 w-4" />
               Flat List
@@ -385,7 +385,7 @@ export default function BookingsPage() {
               variant={viewMode === "grouped" ? "secondary" : "ghost"}
               size="sm"
               onClick={() => setViewMode("grouped")}
-              className={`gap-1.5 h-8 text-xs font-semibold ${viewMode === "grouped" ? "shadow-sm bg-white text-[#767014]" : ""}`}
+              className={`gap-1.5 h-8 text-xs font-semibold ${viewMode === "grouped" ? "shadow-sm bg-white text-[#1A3D1A]" : ""}`}
             >
               <Layers className="h-4 w-4" />
               Grouped View
@@ -394,7 +394,7 @@ export default function BookingsPage() {
               variant={viewMode === "calendar" ? "secondary" : "ghost"}
               size="sm"
               onClick={() => setViewMode("calendar")}
-              className={`gap-1.5 h-8 text-xs font-semibold ${viewMode === "calendar" ? "shadow-sm bg-white text-[#767014]" : ""}`}
+              className={`gap-1.5 h-8 text-xs font-semibold ${viewMode === "calendar" ? "shadow-sm bg-white text-[#1A3D1A]" : ""}`}
             >
               <CalendarIcon className="h-4 w-4" />
               Calendar View
@@ -406,7 +406,7 @@ export default function BookingsPage() {
               onClick={() => setIsCreating(true)}
               size="sm"
               className="shadow-md hover:shadow-lg transition-all text-white font-semibold"
-              style={{ background: "linear-gradient(to right, #767014, #C5BF81)" }}
+              style={{ background: "linear-gradient(to right, #1A3D1A, #D3AE24)" }}
             >
               <Plus className="mr-1.5 h-4 w-4" />
               New Booking
@@ -416,12 +416,12 @@ export default function BookingsPage() {
       </div>
 
       {/* Filter and Search Bar */}
-      <Card className="border shadow-sm" style={{ borderColor: "#C5BF81" }}>
+      <Card className="border shadow-sm" style={{ borderColor: "#D3AE24" }}>
         <CardContent className="p-4 space-y-3">
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 items-end">
             {/* Search */}
             <div className="space-y-1 lg:col-span-2">
-              <Label className="text-xs font-semibold text-[#767014]">Search</Label>
+              <Label className="text-xs font-semibold text-[#1A3D1A]">Search</Label>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -435,7 +435,7 @@ export default function BookingsPage() {
 
             {/* Date Range From */}
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-[#767014]">From Date</Label>
+              <Label className="text-xs font-semibold text-[#1A3D1A]">From Date</Label>
               <Input
                 type="date"
                 value={startDate}
@@ -446,7 +446,7 @@ export default function BookingsPage() {
 
             {/* Date Range To */}
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-[#767014]">To Date</Label>
+              <Label className="text-xs font-semibold text-[#1A3D1A]">To Date</Label>
               <Input
                 type="date"
                 value={endDate}
@@ -457,7 +457,7 @@ export default function BookingsPage() {
 
             {/* Status Filter */}
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-[#767014]">Status</Label>
+              <Label className="text-xs font-semibold text-[#1A3D1A]">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="text-xs h-9">
                   <SelectValue placeholder="All Statuses" />
@@ -474,7 +474,7 @@ export default function BookingsPage() {
 
             {/* Source Filter */}
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-[#767014]">Source</Label>
+              <Label className="text-xs font-semibold text-[#1A3D1A]">Source</Label>
               <Select value={sourceFilter} onValueChange={setSourceFilter}>
                 <SelectTrigger className="text-xs h-9">
                   <SelectValue placeholder="All Sources" />
@@ -509,7 +509,7 @@ export default function BookingsPage() {
 
             {viewMode === "grouped" && (
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-[#767014]">Group by:</span>
+                <span className="font-semibold text-[#1A3D1A]">Group by:</span>
                 <Select value={groupBy} onValueChange={setGroupBy}>
                   <SelectTrigger className="text-xs h-7 w-[180px] bg-background">
                     <SelectValue />
@@ -529,7 +529,7 @@ export default function BookingsPage() {
       {/* Main Content Area Based on View Mode */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 space-y-4">
-          <Loader2 className="h-10 w-10 animate-spin text-[#767014]" />
+          <Loader2 className="h-10 w-10 animate-spin text-[#1A3D1A]" />
           <p className="text-muted-foreground font-medium">Loading bookings...</p>
         </div>
       ) : filteredBookings.length === 0 ? (
@@ -547,7 +547,7 @@ export default function BookingsPage() {
             <Button
               variant="outline"
               onClick={handleClearFilters}
-              style={{ borderColor: "#767014", color: "#767014" }}
+              style={{ borderColor: "#1A3D1A", color: "#1A3D1A" }}
             >
               Reset Filters
             </Button>
@@ -606,16 +606,16 @@ export default function BookingsPage() {
         /* ================= 2. GROUPED & COLLATED VIEW ================= */
         <div className="space-y-6">
           {groupedData.map((group) => (
-            <Card key={group.key} className="border-2 shadow-sm overflow-hidden" style={{ borderColor: "#C5BF81" }}>
+            <Card key={group.key} className="border-2 shadow-sm overflow-hidden" style={{ borderColor: "#D3AE24" }}>
               {/* Group Header & Subtotals */}
               <CardHeader className="bg-muted/30 pb-4 border-b">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider bg-[#767014]/10 text-[#767014]">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded uppercase tracking-wider bg-[#1A3D1A]/10 text-[#1A3D1A]">
                         {groupBy === "agent" ? "Travel Agent" : groupBy === "customer" ? "Customer" : "Reference"}
                       </span>
-                      <CardTitle className="text-lg font-bold" style={{ color: "#767014" }}>
+                      <CardTitle className="text-lg font-bold" style={{ color: "#1A3D1A" }}>
                         {group.label}
                       </CardTitle>
                     </div>
@@ -650,8 +650,8 @@ export default function BookingsPage() {
                   <div key={sess.sessionKey} className="rounded-lg border p-3.5 space-y-3 bg-muted/15" style={{ borderColor: "#E2DFC2" }}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2">
                       <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-[#767014]" />
-                        <span className="font-semibold text-sm text-[#767014]">
+                        <div className="h-2 w-2 rounded-full bg-[#1A3D1A]" />
+                        <span className="font-semibold text-sm text-[#1A3D1A]">
                           {sess.programTitle ? `${sess.programTitle} — ` : ""}{sess.sessionName}
                         </span>
                         <Badge variant="outline" className="text-xs bg-white">
@@ -664,7 +664,7 @@ export default function BookingsPage() {
                           <MapPin className="h-3.5 w-3.5" />
                           {sess.locationName}
                         </span>
-                        <Badge className="bg-[#767014] text-white text-xs">
+                        <Badge className="bg-[#1A3D1A] text-white text-xs">
                           {sess.totalSessionGuests} Attendee{sess.totalSessionGuests !== 1 ? "s" : ""}
                         </Badge>
                       </div>
@@ -675,10 +675,10 @@ export default function BookingsPage() {
                       {sess.items.map(({ booking, item }) => (
                         <div
                           key={`sess-item-${item.id}`}
-                          className="p-2.5 rounded bg-white border text-xs space-y-1 shadow-2xs hover:border-[#767014] transition-colors"
+                          className="p-2.5 rounded bg-white border text-xs space-y-1 shadow-2xs hover:border-[#1A3D1A] transition-colors"
                         >
                           <div className="flex items-center justify-between font-medium">
-                            <span className="font-semibold text-[#767014]">
+                            <span className="font-semibold text-[#1A3D1A]">
                               {booking.payment?.orderId || `RV-${booking.id}`}
                             </span>
                             <Badge
@@ -722,8 +722,8 @@ export default function BookingsPage() {
           {/* Left Column: Calendar Picker */}
           <div className="space-y-6">
             <Card className="border-none shadow-lg overflow-hidden">
-              <CardHeader className="bg-[#767014]/10 pb-4">
-                <CardTitle className="text-[#767014] flex items-center justify-between">
+              <CardHeader className="bg-[#1A3D1A]/10 pb-4">
+                <CardTitle className="text-[#1A3D1A] flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <CalendarIcon className="h-5 w-5" />
                     Calendar Schedule
@@ -743,7 +743,7 @@ export default function BookingsPage() {
                   className="rounded-md"
                   modifiers={{ booked: bookedDays }}
                   modifiersClassNames={{
-                    booked: "bg-[#767014]/20 text-[#767014] font-bold hover:bg-[#767014]/30 rounded-md",
+                    booked: "bg-[#1A3D1A]/20 text-[#1A3D1A] font-bold hover:bg-[#1A3D1A]/30 rounded-md",
                   }}
                 />
               </CardContent>
@@ -754,7 +754,7 @@ export default function BookingsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2" style={{ color: "#767014" }}>
+                <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2" style={{ color: "#1A3D1A" }}>
                   {date ? format(date, "EEEE, MMMM do, yyyy") : "Select a date"}
                 </h2>
                 <p className="text-muted-foreground">
@@ -822,12 +822,12 @@ function BookingCard({ booking, onUpdate, onEdit, canEdit = true }) {
   const refCode = booking.payment?.orderId || `RV-${booking.id}`;
 
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-all duration-200 border-l-4" style={{ borderLeftColor: "#767014" }}>
+    <Card className="overflow-hidden hover:shadow-md transition-all duration-200 border-l-4" style={{ borderLeftColor: "#1A3D1A" }}>
       <div className="p-5 space-y-4">
         {/* Header: Travel Agent, Reference, Source & Status */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0 bg-[#767014]/15 text-[#767014]">
+            <div className="h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg shrink-0 bg-[#1A3D1A]/15 text-[#1A3D1A]">
               {booking.leader?.role === "LEADER"
                 ? (booking.leader?.name?.charAt(0).toUpperCase() || "A")
                 : (isOnline ? "O" : "A")}
@@ -872,7 +872,7 @@ function BookingCard({ booking, onUpdate, onEdit, canEdit = true }) {
               </div>
 
               <div className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                <span style={{ color: "#767014" }}>Travel Agent:</span>
+                <span style={{ color: "#1A3D1A" }}>Travel Agent:</span>
                 {booking.leader?.role === "LEADER" ? (
                   <span className="flex items-center gap-1.5 flex-wrap">
                     <span>{booking.leader.name}</span>
@@ -880,7 +880,7 @@ function BookingCard({ booking, onUpdate, onEdit, canEdit = true }) {
                       ({booking.leader.email})
                     </span>
                     {booking.leader.promoteCode && (
-                      <Badge variant="outline" className="text-[10px] font-mono bg-primary/5 text-[#767014] border-[#C5BF81]">
+                      <Badge variant="outline" className="text-[10px] font-mono bg-primary/5 text-[#1A3D1A] border-[#D3AE24]">
                         {booking.leader.promoteCode}
                       </Badge>
                     )}
@@ -923,7 +923,7 @@ function BookingCard({ booking, onUpdate, onEdit, canEdit = true }) {
                 <div className="font-medium text-sm">
                   {item.session?.program?.title}
                   <span className="text-muted-foreground mx-1">•</span>
-                  <span className="text-[#767014] font-semibold">{item.session?.name}</span>
+                  <span className="text-[#1A3D1A] font-semibold">{item.session?.name}</span>
                   {item.sessionType && (
                     <>
                       <span className="text-muted-foreground mx-1">•</span>
@@ -947,7 +947,7 @@ function BookingCard({ booking, onUpdate, onEdit, canEdit = true }) {
                 </div>
                 {item.customer && (
                   <div className="flex items-center gap-1.5 text-foreground font-medium bg-background px-2 py-0.5 rounded border">
-                    <User className="h-3 w-3 text-[#767014]" />
+                    <User className="h-3 w-3 text-[#1A3D1A]" />
                     {item.customer.name}
                     {item.customer.phone && (
                       <span className="text-muted-foreground text-[11px] font-normal">

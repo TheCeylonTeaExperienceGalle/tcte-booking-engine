@@ -864,12 +864,12 @@ export default function BookingManager({ booking, onUpdate, onEdit, canEdit = tr
     </Dialog>
 
     <AlertDialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
-      <AlertDialogContent className="border-2" style={{ borderColor: '#C5BF81' }}>
+      <AlertDialogContent className="border-2" style={{ borderColor: '#D3AE24' }}>
         <AlertDialogHeader>
-          <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: 'linear-gradient(135deg, #767014, #C5BF81)' }}>
+          <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: 'linear-gradient(135deg, #1A3D1A, #D3AE24)' }}>
             <CheckCircle className="h-8 w-8" style={{ color: '#ffffff' }} />
           </div>
-          <AlertDialogTitle className="text-center text-xl" style={{ color: '#767014' }}>
+          <AlertDialogTitle className="text-center text-xl" style={{ color: '#1A3D1A' }}>
             Success!
           </AlertDialogTitle>
           <AlertDialogDescription className="text-center text-base" style={{ color: '#000000', opacity: 0.8 }}>
@@ -882,7 +882,7 @@ export default function BookingManager({ booking, onUpdate, onEdit, canEdit = tr
               setSuccessDialogOpen(false);
               if (onUpdate) onUpdate();
             }}
-            style={{ background: 'linear-gradient(135deg, #767014, #C5BF81)', color: '#ffffff' }}
+            style={{ background: 'linear-gradient(135deg, #1A3D1A, #D3AE24)', color: '#ffffff' }}
           >
             <CheckCircle className="h-4 w-4 mr-2" />
             Ok
@@ -892,12 +892,12 @@ export default function BookingManager({ booking, onUpdate, onEdit, canEdit = tr
     </AlertDialog>
 
     <AlertDialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
-      <AlertDialogContent className="border-2" style={{ borderColor: '#C5BF81' }}>
+      <AlertDialogContent className="border-2" style={{ borderColor: '#D3AE24' }}>
         <AlertDialogHeader>
-          <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(197, 191, 129, 0.3)' }}>
-            <XCircle className="h-8 w-8" style={{ color: '#767014' }} />
+          <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(211, 174, 36, 0.3)' }}>
+            <XCircle className="h-8 w-8" style={{ color: '#1A3D1A' }} />
           </div>
-          <AlertDialogTitle className="text-center text-xl" style={{ color: '#767014' }}>
+          <AlertDialogTitle className="text-center text-xl" style={{ color: '#1A3D1A' }}>
             Oops! Something went wrong
           </AlertDialogTitle>
           <AlertDialogDescription className="text-center text-base" style={{ color: '#000000', opacity: 0.8 }}>
@@ -907,7 +907,7 @@ export default function BookingManager({ booking, onUpdate, onEdit, canEdit = tr
         <AlertDialogFooter className="sm:justify-center">
           <AlertDialogAction
             onClick={() => setErrorDialogOpen(false)}
-            style={{ backgroundColor: '#767014', color: '#ffffff' }}
+            style={{ backgroundColor: '#1A3D1A', color: '#ffffff' }}
           >
             Try Again
           </AlertDialogAction>

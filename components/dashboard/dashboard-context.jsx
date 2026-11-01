@@ -116,7 +116,7 @@ export function DashboardProvider({ children }) {
 
         <main
           className={cn(
-            "flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-all duration-300",
+            "flex-1 overflow-y-auto bg-[#F9F6F0] transition-all duration-300",
             isSidebarCollapsed ? "md:ml-16" : "md:ml-64"
           )}
         >
