@@ -1,74 +1,131 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
-import { jsonAuthError, requireAdmin } from "@/lib/security/auth";
+import { verifyAccessToken } from "@/lib/jwt";
 
-export async function POST(request) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
+export const dynamic = "force-dynamic";
+
+function checkAdminAuth(request) {
+  const authHeader =
+    request.headers.get("Authorization") ||
+    request.headers.get("authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return { error: "Missing authorization token", status: 401 };
+  }
+  const token = authHeader.split(" ")[1];
 
   try {
-    const body = await request.json();
-    const { name, email, password } = body;
+    const decoded = verifyAccessToken(token);
+    const roleName =
+      typeof decoded?.role === "string" ? decoded.role : decoded?.role?.name;
+    if (!roleName || roleName.toLowerCase() !== "admin") {
+      return { error: "Forbidden: Admin access required", status: 403 };
+    }
+    return { decoded };
+  } catch (err) {
+    return { error: "Invalid or expired token", status: 401 };
+  }
+}
 
-    if (!email || !password || !name) {
+export async function GET(request) {
+  try {
+    const auth = checkAdminAuth(request);
+    if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        isActive: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return NextResponse.json({ users });
+  } catch (error) {
+    console.error("Get users error", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const auth = checkAdminAuth(request);
+    if (auth.error) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+    const body = await request.json();
+    const { name, email, username, password, roleId } = body;
+    const userIdentifier = (username || email)?.trim().toLowerCase();
+
+    if (!userIdentifier || !password || !name || !roleId) {
       return NextResponse.json(
-        { error: "Name, email, and password are required" },
+        { error: "Name, username, password, and role are required" },
         { status: 400 }
       );
     }
 
     if (password.length < 6) {
-        return NextResponse.json(
-          { error: "Password must be at least 6 characters" },
-          { status: 400 }
-        );
-    }
-
-    const normalizedEmail = email.trim().toLowerCase();
-
-    // 3. Check for existing user
-    const existingUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
-    });
-    if (existingUser) {
       return NextResponse.json(
-        { error: "Email is already in use" },
-        { status: 409 }
+        { error: "Password must be at least 6 characters" },
+        { status: 400 }
       );
     }
 
-    // 4. Create User
-    const hashedPassword = await hashPassword(password);
+    const parsedRoleId = parseInt(roleId, 10);
+    const role = await prisma.role.findUnique({
+      where: { id: parsedRoleId },
+    });
 
-    // Default to creating an admin user as requested ("give admin added")
-    // Or we could pass a role in body, but for now assuming admin creation.
+    if (!role || role.isActive === false) {
+      return NextResponse.json(
+        { error: "Cannot assign an inactive or non-existent role" },
+        { status: 400 }
+      );
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: userIdentifier },
+    });
+    if (existingUser) {
+      return NextResponse.json({ error: "Username is already in use" }, { status: 409 });
+    }
+
+    const hashedPassword = await hashPassword(password);
+    
     const newUser = await prisma.user.create({
       data: {
-        name,
-        email: normalizedEmail,
+        name: name.trim(),
+        email: userIdentifier,
         password: hashedPassword,
-        role: "admin",
+        roleId: parsedRoleId, 
       },
       select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          createdAt: true
+        id: true,
+        name: true,
+        email: true,
+        isActive: true,
+        role: {
+          select: { id: true, name: true }
+        },
+        createdAt: true
       }
     });
 
     return NextResponse.json({
       success: true,
-      message: "Admin user created successfully",
+      message: "User created successfully",
       user: newUser,
     });
   } catch (error) {
     console.error("Create user error", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

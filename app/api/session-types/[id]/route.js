@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonAuthError, requireAdmin } from "@/lib/security/auth";
+import { requirePermission } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 function parseId(rawId) {
   const id = Number.parseInt(rawId, 10);
@@ -9,10 +11,12 @@ function parseId(rawId) {
 
 // GET /api/session-types/[id] - Get a single session type
 export async function GET(request, context) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "session-types", "read");
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
     const { id: rawId } = await context.params;
     const id = parseId(rawId);
 
@@ -67,10 +71,12 @@ export async function GET(request, context) {
 
 // PUT /api/session-types/[id] - Update a session type
 export async function PUT(request, context) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "session-types", "write");
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
     const { id: rawId } = await context.params;
     const id = parseId(rawId);
 
@@ -171,10 +177,12 @@ export async function PUT(request, context) {
 
 // DELETE /api/session-types/[id] - Soft delete a session type
 export async function DELETE(request, context) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "session-types", "write");
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
     const { id: rawId } = await context.params;
     const id = parseId(rawId);
 

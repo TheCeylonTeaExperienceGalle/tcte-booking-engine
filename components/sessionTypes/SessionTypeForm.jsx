@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, AlertCircle, DollarSign, Tag } from "lucide-react";
 
 const DEFAULT_FORM_STATE = {
   sessionId: "",
@@ -38,7 +38,6 @@ export default function SessionTypeForm({
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const isEditMode = useMemo(() => Boolean(initialData?.id), [initialData]);
   const DialogIcon = isEditMode ? Pencil : Plus;
@@ -50,7 +49,6 @@ export default function SessionTypeForm({
   useEffect(() => {
     if (!open) {
       setError("");
-      setSuccess("");
       if (!isEditMode) {
         setFormData({ ...DEFAULT_FORM_STATE });
       }
@@ -83,10 +81,8 @@ export default function SessionTypeForm({
         setSessions(data.sessions);
       }
     } catch (err) {
-      const message =
-        err instanceof AuthError ? err.message : "Failed to fetch sessions";
       console.error("Failed to fetch sessions:", err);
-      setError(message);
+      setError("Failed to load sessions.");
     }
   }
 
@@ -102,7 +98,6 @@ export default function SessionTypeForm({
     event.preventDefault();
     setLoading(true);
     setError("");
-    setSuccess("");
 
     const endpoint = isEditMode
       ? `/api/session-types/${initialData.id}`
@@ -125,11 +120,6 @@ export default function SessionTypeForm({
         return;
       }
 
-      if (!isEditMode) {
-        setSuccess("Session type created successfully!");
-        setFormData({ ...DEFAULT_FORM_STATE });
-      }
-
       onOpenChange(false);
       onSuccess?.(data.sessionType);
     } catch (err) {
@@ -145,114 +135,135 @@ export default function SessionTypeForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2" style={{ color: '#767014' }}>
-            <DialogIcon className="h-5 w-5" />
+      <DialogContent className="sm:max-w-[480px] bg-background border-muted/30 shadow-xl">
+        <DialogHeader className="pb-4 border-b border-border/50">
+          <DialogTitle className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <DialogIcon className="h-4 w-4" />
+            </div>
             {isEditMode ? "Update Session Type" : "Create Session Type"}
           </DialogTitle>
-          <DialogDescription style={{ color: '#000000', opacity: 0.7 }}>
+          <DialogDescription className="text-muted-foreground mt-1">
             {isEditMode
-              ? "Adjust the session type details to keep information up to date."
-              : "Provide the session information and pricing to add a new type."}
+              ? "Adjust the pricing and details to keep information up to date."
+              : "Provide the details and pricing to add a new ticket variation."}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6 pt-2 pb-4">
           {error && (
-            <div className="border px-4 py-3 rounded-md" style={{ backgroundColor: '#C5BF81', borderColor: '#767014', color: '#000000' }}>
+            <div className="flex items-center gap-2 bg-destructive/10 text-destructive text-sm font-medium p-3 rounded-md">
+              <AlertCircle className="h-4 w-4" />
               {error}
             </div>
           )}
 
-          {success && !isEditMode && (
-            <div className="border px-4 py-3 rounded-md" style={{ backgroundColor: '#C5BF81', borderColor: '#767014', color: '#000000' }}>
-              {success}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold tracking-tight flex items-center gap-2">
+              <Tag className="h-4 w-4 text-primary" /> Session Details
+            </h3>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="sessionId" className="font-semibold text-foreground">
+                Parent Session <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={formData.sessionId}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, sessionId: value }))
+                }
+                required
+              >
+                <SelectTrigger id="sessionId" className="bg-muted/30">
+                  <SelectValue placeholder="Select a session" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sessions.map((session) => (
+                    <SelectItem key={session.id} value={String(session.id)}>
+                      {session.name} — {session.program?.title || "Untitled program"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          )}
 
-          <div className="space-y-2">
-            <Label htmlFor="sessionId" style={{ color: '#767014', fontWeight: 600 }}>
-              Session <span style={{ color: '#000000' }}>*</span>
-            </Label>
-            <Select
-              value={formData.sessionId}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, sessionId: value }))
-              }
-              required
-            >
-              <SelectTrigger id="sessionId">
-                <SelectValue placeholder="Select a session" />
-              </SelectTrigger>
-              <SelectContent>
-                {sessions.map((session) => (
-                  <SelectItem key={session.id} value={String(session.id)}>
-                    {session.name} —{" "}
-                    {session.program?.title || "Untitled program"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name" style={{ color: '#767014', fontWeight: 600 }}>
-              Name <span style={{ color: '#000000' }}>*</span>
-            </Label>
-            <Input
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              placeholder="e.g. Beginner"
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="price">
-                Price <span className="text-destructive">*</span>
+            <div className="space-y-1.5">
+              <Label htmlFor="name" className="font-semibold text-foreground">
+                Type Name <span className="text-destructive">*</span>
               </Label>
               <Input
-                id="price"
-                type="number"
-                name="price"
-                value={formData.price}
+                id="name"
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
                 required
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="specialPrice">Special Price</Label>
-              <Input
-                id="specialPrice"
-                type="number"
-                name="specialPrice"
-                value={formData.specialPrice}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
-                placeholder="Optional"
+                placeholder="e.g. VIP Admission"
+                className="bg-muted/30"
               />
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="h-px bg-border/50 w-full" />
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold tracking-tight flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-primary" /> Pricing
+            </h3>
+            
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="price" className="font-semibold text-foreground">
+                  Regular Price <span className="text-destructive">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="price"
+                    type="number"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    required
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    className="bg-muted/30 pl-9"
+                  />
+                  <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+              
+              <div className="space-y-1.5">
+                <Label htmlFor="specialPrice" className="font-semibold text-foreground">
+                  Special Price (Optional)
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="specialPrice"
+                    type="number"
+                    name="specialPrice"
+                    value={formData.specialPrice}
+                    onChange={handleChange}
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    className="bg-muted/30 pl-9"
+                  />
+                  <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 border-t border-border/50 flex gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="flex-1 border-2"
-              style={{ borderColor: '#C5BF81', color: '#000000', backgroundColor: '#ffffff' }}
+              className="flex-1 font-medium hover:bg-muted"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="flex-1" style={{ background: 'linear-gradient(to right, #767014, #C5BF81)', color: '#ffffff' }}>
+            <Button type="submit" disabled={loading} className="flex-1 font-medium shadow-sm">
               {loading
                 ? isEditMode
                   ? "Updating..."

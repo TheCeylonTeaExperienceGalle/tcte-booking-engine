@@ -1,7 +1,20 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
-  reactCompiler: true,
+  distDir: process.env.NEXT_DIST_DIR || ".next",
+  turbopack: {
+    root: projectRoot,
+  },
+
+  reactCompiler: false, // re-enable only after measuring build time
+
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
   images: {
     remotePatterns: [
       {
@@ -11,18 +24,22 @@ const nextConfig = {
     ],
     qualities: [70, 75, 100],
   },
-  turbopack: {
-    root: import.meta.dirname,
-  },
+
+  // Page HTML / RSC must never be cached by nginx or the browser, otherwise a
+  // new deploy leaves stale pages pointing at deleted hashed chunks (404s).
+  // Hashed static assets (_next/), APIs and files with extensions are excluded.
   async headers() {
+    const noStore = [
+      {
+        key: "Cache-Control",
+        value: "private, no-cache, no-store, max-age=0, must-revalidate",
+      },
+    ];
+
     return [
       {
-        source: "/dashboard/:path*",
-        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
-      },
-      {
-        source: "/login",
-        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+        source: "/:path((?!_next/|api/|.*\\..*).*)",
+        headers: noStore,
       },
     ];
   },

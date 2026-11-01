@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonAuthError, requireAdmin } from "@/lib/security/auth";
+import { requirePermission } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 function parseTimeValue(value) {
   if (!value) return null;
@@ -36,10 +38,12 @@ function parseTimeValue(value) {
 
 // GET /api/sessions - List all sessions or filter by programId
 export async function GET(request) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "sessions", "read");
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
     const { searchParams } = new URL(request.url);
     const programId = searchParams.get("programId");
     const includeTypes = searchParams.get("includeTypes") === "true";
@@ -104,12 +108,14 @@ export async function GET(request) {
 
 // POST /api/sessions - Create a new session
 export async function POST(request) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "sessions", "write");
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
     const body = await request.json();
-    const { programId, name, startTime, endTime, price, specialPrice } = body;
+    const { programId, name, startTime, endTime, price, specialPrice, sessionTypes } = body;
 
     // Validation
     if (!programId || !name || !startTime || !endTime) {
@@ -141,21 +147,34 @@ export async function POST(request) {
       );
     }
 
+    const data = {
+      programId: parseInt(programId),
+      name,
+      startTime: parsedStartTime,
+      endTime: parsedEndTime,
+      price: price ? parseFloat(price) : null,
+      specialPrice: specialPrice ? parseFloat(specialPrice) : null,
+    };
+
+    if (sessionTypes && Array.isArray(sessionTypes) && sessionTypes.length > 0) {
+      data.sessionTypes = {
+        create: sessionTypes.map((type) => ({
+          name: type.name,
+          price: type.price ? parseFloat(type.price) : 0,
+          specialPrice: type.specialPrice ? parseFloat(type.specialPrice) : null,
+        })),
+      };
+    }
+
     const session = await prisma.session.create({
-      data: {
-        programId: parseInt(programId),
-        name,
-        startTime: parsedStartTime,
-        endTime: parsedEndTime,
-        price: price ? parseFloat(price) : null,
-        specialPrice: specialPrice ? parseFloat(specialPrice) : null,
-      },
+      data,
       include: {
         program: {
           include: {
             location: true,
           },
         },
+        sessionTypes: true,
       },
     });
 

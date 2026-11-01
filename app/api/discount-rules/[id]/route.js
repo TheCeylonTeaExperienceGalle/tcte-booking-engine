@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonAuthError, requireAdmin } from "@/lib/security/auth";
+import { requirePermission } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 // GET - Fetch a single discount rule
 export async function GET(request, { params }) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "discount-rules", "read");
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
     const { id } = await params;
     const ruleId = parseInt(id, 10);
 
@@ -20,6 +24,7 @@ export async function GET(request, { params }) {
       include: {
         program: {
           include: {
+            location: true,
             sessions: {
               where: { deletedAt: null },
               orderBy: { createdAt: "asc" },
@@ -53,10 +58,15 @@ export async function GET(request, { params }) {
 
 // PUT - Update a discount rule
 export async function PUT(request, { params }) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "discount-rules", "write");
+    if (!authCheck.authorized) {
+      return NextResponse.json(
+        { error: authCheck.error },
+        { status: authCheck.status }
+      );
+    }
+
     const { id } = await params;
     const ruleId = parseInt(id, 10);
 
@@ -227,10 +237,15 @@ export async function PUT(request, { params }) {
 
 // DELETE - Soft delete a discount rule
 export async function DELETE(request, { params }) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "discount-rules", "write");
+    if (!authCheck.authorized) {
+      return NextResponse.json(
+        { error: authCheck.error },
+        { status: authCheck.status }
+      );
+    }
+
     const { id } = await params;
     const ruleId = parseInt(id, 10);
 

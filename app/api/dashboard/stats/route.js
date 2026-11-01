@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonAuthError, requireAdmin } from "@/lib/security/auth";
+import { requirePermission } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "dashboard", "read");
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
     const [
       totalBookings,
       activeCustomers,

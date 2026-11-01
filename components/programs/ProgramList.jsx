@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchWithAuth, AuthError } from "@/lib/apiClient";
 import ProgramForm from "@/components/programs/ProgramForm";
 import ProgramDetails from "@/components/programs/ProgramDetails";
+import { usePermissions } from "@/lib/usePermissions";
 import {
   Card,
   CardContent,
@@ -13,6 +14,15 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +47,9 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
+  LayoutGrid,
+  List,
+  Tag
 } from "lucide-react";
 
 function formatTime(value) {
@@ -53,6 +66,7 @@ function formatTime(value) {
 }
 
 export default function ProgramList() {
+  const { canWrite } = usePermissions("programs");
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -63,7 +77,8 @@ export default function ProgramList() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState("");
   const [selectedProgram, setSelectedProgram] = useState(null);
-
+  const [viewMode, setViewMode] = useState("grid");
+  
   // Alert Dialog States
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [programToDelete, setProgramToDelete] = useState(null);
@@ -89,7 +104,7 @@ export default function ProgramList() {
       const data = await response.json();
 
       if (response.ok) {
-        setPrograms(data.programs);
+        setPrograms(Array.isArray(data.programs) ? data.programs.filter(Boolean) : []);
         if (!silent) {
           setError("");
         }
@@ -125,7 +140,7 @@ export default function ProgramList() {
       });
 
       if (response.ok) {
-        setPrograms((prev) => prev.filter((p) => p.id !== id));
+        setPrograms((prev) => (Array.isArray(prev) ? prev.filter((p) => p && p.id !== id) : []));
         setSuccessMessage("Program deleted successfully!");
         setSuccessDialogOpen(true);
       } else {
@@ -220,39 +235,22 @@ export default function ProgramList() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-t-4" style={{ borderColor: '#767014' }}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <Sparkles className="h-6 w-6 animate-pulse" style={{ color: '#767014' }} />
-          </div>
-        </div>
-        <p className="text-lg font-medium" style={{ background: 'linear-gradient(to right, #767014, #C5BF81)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
-          Loading your amazing programs...
-        </p>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+        <p className="text-muted-foreground font-medium animate-pulse">Loading programs...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="border-2" style={{ borderColor: '#C5BF81', background: 'linear-gradient(to bottom right, #C5BF81, #ffffff)' }}>
-        <CardContent className="pt-6">
-          <div className="text-center">
-            <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: '#C5BF81' }}>
-              <span className="text-3xl">⚠️</span>
-            </div>
-            <p className="font-bold text-xl mb-2" style={{ color: '#767014' }}>
-              Oops! Something went wrong
-            </p>
-            <p className="text-sm" style={{ color: '#000000' }}>{error}</p>
-            <Button
-              onClick={() => fetchPrograms()}
-              className="mt-4"
-              style={{ backgroundColor: '#767014', color: '#ffffff' }}
-            >
-              Try Again
-            </Button>
-          </div>
+      <Card className="border-red-200 bg-red-50 shadow-sm">
+        <CardContent className="pt-6 flex flex-col items-center">
+          <AlertTriangle className="h-10 w-10 text-red-500 mb-3" />
+          <p className="font-semibold text-red-900 mb-1">Failed to load programs</p>
+          <p className="text-sm text-red-700 mb-4">{error}</p>
+          <Button onClick={() => fetchPrograms()} variant="outline" className="border-red-300 text-red-700 hover:bg-red-100">
+            Try Again
+          </Button>
         </CardContent>
       </Card>
     );
@@ -260,207 +258,229 @@ export default function ProgramList() {
 
   return (
     <div className="space-y-6">
-      {/* Header Section with Gradient */}
-      <div className="relative overflow-hidden rounded-2xl p-8 shadow-xl" style={{ background: 'linear-gradient(to bottom right, #767014, #C5BF81)' }}>
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}></div>
-
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div style={{ color: '#ffffff' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="h-6 w-6 animate-pulse" style={{ color: '#ffffff' }} />
-              <h2 className="text-3xl font-bold">Your Programs</h2>
-            </div>
-            <p className="text-lg" style={{ color: '#ffffff', opacity: 0.9 }}>
-              {programs.length} awesome program
-              {programs.length !== 1 ? "s" : ""} ready to inspire
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center bg-muted/80 rounded-md p-1 border">
             <Button
-              onClick={() => fetchPrograms()}
-              variant="outline"
-              size="lg"
-              disabled={loading}
-              className="backdrop-blur-sm"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 255, 255, 0.3)', color: '#ffffff' }}
+              variant="ghost"
+              size="icon"
+              onClick={() => setViewMode("grid")}
+              className={`h-8 w-8 rounded-sm transition-all ${viewMode === 'grid' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              <RefreshCw className="mr-2 h-5 w-5" />
-              Refresh
+              <LayoutGrid className="h-4 w-4" />
             </Button>
             <Button
-              onClick={handleOpenCreate}
-              size="lg"
-              className="shadow-lg hover:shadow-xl transition-all duration-300"
-              style={{ backgroundColor: '#ffffff', color: '#767014' }}
+              variant="ghost"
+              size="icon"
+              onClick={() => setViewMode("list")}
+              className={`h-8 w-8 rounded-sm transition-all ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
             >
-              <Plus className="mr-2 h-5 w-5" />
-              New Program
+              <List className="h-4 w-4" />
             </Button>
           </div>
+          <Button onClick={() => fetchPrograms()} variant="outline" size="sm" disabled={loading}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+          {canWrite && (
+            <Button onClick={handleOpenCreate} size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              New Session
+            </Button>
+          )}
         </div>
       </div>
 
       {programs.length === 0 ? (
-        <Card className="border-2 border-dashed" style={{ borderColor: '#C5BF81', background: 'linear-gradient(to bottom right, #ffffff, #C5BF81)' }}>
-          <CardContent className="pt-6">
-            <div className="text-center py-12">
-              <div className="mx-auto w-24 h-24 rounded-full flex items-center justify-center mb-6" style={{ background: 'linear-gradient(to bottom right, #767014, #C5BF81)' }}>
-                <Calendar className="h-12 w-12" style={{ color: '#ffffff' }} />
-              </div>
-              <h3 className="text-2xl font-bold mb-3" style={{ background: 'linear-gradient(to right, #767014, #C5BF81)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
-                No programs yet
-              </h3>
-              <p className="mb-6 max-w-md mx-auto" style={{ color: '#000000', opacity: 0.7 }}>
-                Create your first amazing training program and start inspiring
-                your audience!
-              </p>
-              <Button
-                onClick={handleOpenCreate}
-                className="shadow-lg hover:shadow-xl transition-all duration-300"
-                style={{ background: 'linear-gradient(to right, #767014, #C5BF81)', color: '#ffffff' }}
-                size="lg"
-              >
-                <Plus className="mr-2 h-5 w-5" />
-                Create Your First Program
-              </Button>
+        <Card className="border-dashed shadow-sm">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="h-20 w-20 bg-muted rounded-full flex items-center justify-center mb-6">
+              <Calendar className="h-10 w-10 text-muted-foreground/50" />
             </div>
+            <h3 className="text-xl font-semibold mb-2">No programs found</h3>
+            <p className="text-muted-foreground text-center max-w-sm mb-6">
+              Get started by creating your first program. You can assign locations, schedules, and track capacity.
+            </p>
+            {canWrite && (
+              <Button onClick={handleOpenCreate}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Program
+              </Button>
+            )}
           </CardContent>
         </Card>
-      ) : (
+      ) : viewMode === "grid" ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {programs.map((program, index) => {
-            // Different gradient colors for variety using custom palette
-            const gradients = [
-              'linear-gradient(to right, #767014, #C5BF81)',
-              'linear-gradient(to right, #C5BF81, #767014)',
-              'linear-gradient(to right, #000000, #767014)',
-              'linear-gradient(to right, #767014, #000000)',
-              'linear-gradient(to right, #C5BF81, #ffffff)',
-              'linear-gradient(to right, #767014, #ffffff)',
-            ];
-            const gradient = gradients[index % gradients.length];
-
-            return (
-              <Card
-                key={program.id}
-                className="group hover:shadow-2xl transition-all duration-300 border-2 overflow-hidden"
-                style={{ borderColor: '#C5BF81' }}
-              >
-                {/* Colorful Header */}
-                {/* <div className="h-2" style={{ background: gradient }}></div> */}
-
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl mb-3 transition-colors" style={{ color: '#000000' }}>
-                        {program.title}
-                      </CardTitle>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge
-                          variant={program.isActive ? "default" : "secondary"}
-                          className="border-0 shadow-sm"
-                          style={program.isActive
-                            ? { background: 'linear-gradient(to right, #767014, #C5BF81)', color: '#ffffff' }
-                            : { backgroundColor: '#C5BF81', color: '#000000', opacity: 0.6 }
-                          }
-                        >
-                          {program.isActive ? "🟢 Active" : "⚫ Inactive"}
-                        </Badge>
-                        {program._count && (
-                          <Badge
-                            variant="outline"
-                            className="border-2"
-                            style={{ borderColor: '#767014', backgroundColor: '#ffffff', color: '#767014' }}
-                          >
-                            📚 {program._count.sessions} session
-                            {program._count.sessions !== 1 ? "s" : ""}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  {program.description && (
-                    <CardDescription className="line-clamp-2 text-base" style={{ color: '#000000', opacity: 0.7 }}>
-                      {program.description}
-                    </CardDescription>
+          {programs.map((program) => (
+            <Card key={program.id} className="group hover:shadow-lg hover:border-primary/20 transition-all duration-300 overflow-hidden flex flex-col bg-card">
+              <CardHeader className="pb-4 border-b border-muted/30">
+                <div className="flex justify-between items-start gap-4 mb-3">
+                  <CardTitle className="text-xl leading-tight line-clamp-2">{program.title}</CardTitle>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={program.isActive ? "default" : "secondary"} className="font-medium shadow-sm">
+                    {program.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                  {program._count && (
+                    <Badge variant="outline" className="font-medium bg-background">
+                      {program._count.sessions} Session{program._count.sessions !== 1 ? "s" : ""}
+                    </Badge>
                   )}
+                  {program.discountRules?.length > 0 && (
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100/80 font-medium border-amber-200">
+                      <Tag className="h-3 w-3 mr-1" />
+                      Promo
+                    </Badge>
+                  )}
+                </div>
+              </CardHeader>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ backgroundColor: '#ffffff', borderColor: '#C5BF81' }}>
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(to bottom right, #767014, #C5BF81)' }}>
-                        <MapPin className="h-5 w-5" style={{ color: '#ffffff' }} />
-                      </div>
-                      <span className="text-sm font-medium" style={{ color: '#000000' }}>
-                        {program.location?.name || "No location"}
-                      </span>
-                    </div>
+              <CardContent className="flex-1 flex flex-col gap-4 pt-5">
+                {program.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                    {program.description}
+                  </p>
+                )}
 
-                    <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ backgroundColor: '#ffffff', borderColor: '#C5BF81' }}>
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#767014' }}>
-                        <Users className="h-5 w-5" style={{ color: '#ffffff' }} />
-                      </div>
-                      <span className="text-sm font-medium" style={{ color: '#000000' }}>
-                        {program.seats} seats available
-                      </span>
+                <div className="space-y-4 mt-auto">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                      <MapPin className="h-4 w-4" />
                     </div>
-
-                    <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ backgroundColor: '#ffffff', borderColor: '#C5BF81' }}>
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#C5BF81' }}>
-                        <Clock className="h-5 w-5" style={{ color: '#000000' }} />
-                      </div>
-                      <span className="text-sm font-medium" style={{ color: '#000000' }}>
-                        {formatTime(program.startTime)} -{" "}
-                        {formatTime(program.endTime)}
-                      </span>
-                    </div>
+                    <span className="text-sm text-foreground font-medium truncate">
+                      {program.location?.name || "No location assigned"}
+                    </span>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOpenDetails(program.id)}
-                      className="flex-1 border-2"
-                      style={{ borderColor: '#767014', color: '#767014', backgroundColor: '#ffffff' }}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOpenEdit(program)}
-                      className="flex-1 border-2"
-                      style={{ borderColor: '#C5BF81', color: '#767014', backgroundColor: '#ffffff' }}
-                    >
-                      <Pencil className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openDeleteDialog(program)}
-                      disabled={deleteLoading === program.id}
-                      className="border-2"
-                      style={{ borderColor: '#000000', color: '#000000', backgroundColor: '#ffffff' }}
-                    >
-                      {deleteLoading === program.id ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                    </Button>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                      <Clock className="h-4 w-4" />
+                    </div>
+                    <span className="text-sm text-foreground font-medium">
+                      {formatTime(program?.startTime)} - {formatTime(program?.endTime)}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                      <Users className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <div className="flex justify-between text-xs font-medium text-foreground">
+                        <span>{program.totalBookedSeats || 0} / {program.seats} Seats</span>
+                        <span>{Math.round(((program.totalBookedSeats || 0) / Math.max(program.seats, 1)) * 100)}%</span>
+                      </div>
+                      <Progress value={((program.totalBookedSeats || 0) / Math.max(program.seats, 1)) * 100} className="h-1.5" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 pt-5 mt-2 border-t border-border/40">
+                  <Button variant="secondary" size="sm" onClick={() => handleOpenDetails(program.id)} className="flex-1 font-medium hover:bg-secondary/80">
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                  {canWrite && (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => handleOpenEdit(program)} className="flex-1 font-medium hover:bg-muted/50">
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(program)} disabled={deleteLoading === program.id} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                        {deleteLoading === program.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
+      ) : (
+        <Card className="overflow-hidden shadow-sm border-muted">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="w-[300px] font-semibold">Program</TableHead>
+                  <TableHead className="font-semibold">Status</TableHead>
+                  <TableHead className="font-semibold">Location</TableHead>
+                  <TableHead className="font-semibold">Schedule</TableHead>
+                  <TableHead className="w-[200px] font-semibold">Capacity</TableHead>
+                  <TableHead className="text-right font-semibold">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {programs.map((program) => (
+                  <TableRow key={program.id} className="group hover:bg-muted/30 transition-colors">
+                    <TableCell>
+                      <div className="font-medium text-foreground">{program.title}</div>
+                      {program.discountRules?.length > 0 && (
+                        <div className="flex items-center text-[10px] uppercase tracking-wider font-bold text-amber-600 mt-1.5">
+                          <Tag className="h-3 w-3 mr-1" /> Promotion
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={program.isActive ? "default" : "secondary"} className="shadow-none font-medium">
+                        {program.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground font-medium text-sm">
+                      {program.location?.name || "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap text-sm">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="h-3 w-3" />
+                        {formatTime(program?.startTime)} - {formatTime(program?.endTime)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1.5 pr-4">
+                        <div className="flex justify-between text-[11px] font-medium text-muted-foreground">
+                          <span>{program.totalBookedSeats || 0} / {program.seats}</span>
+                          <span>{Math.round(((program.totalBookedSeats || 0) / Math.max(program.seats, 1)) * 100)}%</span>
+                        </div>
+                        <Progress value={((program.totalBookedSeats || 0) / Math.max(program.seats, 1)) * 100} className="h-1.5" />
+                      </div>
+                    </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                          <Button variant="secondary" size="sm" onClick={() => handleOpenDetails(program.id)} className="h-8 font-medium hover:bg-secondary/80">
+                            <Eye className="h-4 w-4 mr-1.5" />
+                            View
+                          </Button>
+                          {canWrite && (
+                            <>
+                              <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(program)} className="h-8 w-8 hover:bg-secondary">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive hover:bg-destructive/10" onClick={() => openDeleteDialog(program)} disabled={deleteLoading === program.id}>
+                                {deleteLoading === program.id ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
       )}
 
       <ProgramForm
@@ -480,36 +500,25 @@ export default function ProgramList() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: '#C5BF81' }}>
+        <AlertDialogContent className="sm:max-w-md">
           <AlertDialogHeader>
-            <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(197, 191, 129, 0.2)' }}>
-              <AlertTriangle className="h-8 w-8" style={{ color: '#767014' }} />
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
-            <AlertDialogTitle className="text-center text-xl" style={{ color: '#767014' }}>
-              Delete Program?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-center" style={{ color: '#000000', opacity: 0.7 }}>
-              Are you want to sure delete this program?
+            <AlertDialogTitle className="text-center text-xl">Delete Program?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Are you sure you want to delete this program? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center gap-3">
-            <AlertDialogCancel
-              className="border-2"
-              style={{ borderColor: '#C5BF81', color: '#767014' }}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="border-0"
-              style={{ backgroundColor: '#767014', color: '#ffffff' }}
-            >
+          <AlertDialogFooter className="sm:justify-center gap-2 sm:gap-4 mt-2">
+            <AlertDialogCancel className="mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700 text-white shadow-sm">
               {deleteLoading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
               ) : (
                 <Trash2 className="h-4 w-4 mr-2" />
               )}
-              Delete
+              Delete Program
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -517,49 +526,36 @@ export default function ProgramList() {
 
       {/* Success Dialog */}
       <AlertDialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: '#C5BF81' }}>
+        <AlertDialogContent className="sm:max-w-md">
           <AlertDialogHeader>
-            <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: 'linear-gradient(135deg, #767014, #C5BF81)' }}>
-              <CheckCircle className="h-8 w-8" style={{ color: '#ffffff' }} />
+            <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+              <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
-            <AlertDialogTitle className="text-center text-xl" style={{ color: '#767014' }}>
-              Success!
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-base" style={{ color: '#000000', opacity: 0.8 }}>
+            <AlertDialogTitle className="text-center text-xl">Success!</AlertDialogTitle>
+            <AlertDialogDescription className="text-center font-medium">
               {successMessage}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center">
-            <AlertDialogAction
-              style={{ background: 'linear-gradient(135deg, #767014, #C5BF81)', color: '#ffffff' }}
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Ok
-            </AlertDialogAction>
+          <AlertDialogFooter className="sm:justify-center mt-2">
+            <AlertDialogAction className="min-w-[100px]">Ok</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {/* Error Dialog */}
       <AlertDialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: '#C5BF81' }}>
+        <AlertDialogContent className="sm:max-w-md">
           <AlertDialogHeader>
-            <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(197, 191, 129, 0.3)' }}>
-              <XCircle className="h-8 w-8" style={{ color: '#767014' }} />
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
+              <XCircle className="h-6 w-6 text-red-600" />
             </div>
-            <AlertDialogTitle className="text-center text-xl" style={{ color: '#767014' }}>
-              Oops! Something went wrong
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-base" style={{ color: '#000000', opacity: 0.8 }}>
+            <AlertDialogTitle className="text-center text-xl">Something went wrong</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
               {errorMessage}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center">
-            <AlertDialogAction
-              style={{ backgroundColor: '#767014', color: '#ffffff' }}
-            >
-              Try Again
-            </AlertDialogAction>
+          <AlertDialogFooter className="sm:justify-center mt-2">
+            <AlertDialogAction variant="outline" className="min-w-[100px]">Dismiss</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

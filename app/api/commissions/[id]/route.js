@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonAuthError, requireAdmin } from "@/lib/security/auth";
+import { requirePermission } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 // GET - Fetch a single commission record
 export async function GET(request, { params }) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "commission", "read");
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
     const { id } = await params;
     const commissionId = parseInt(id, 10);
 
@@ -78,10 +82,12 @@ export async function GET(request, { params }) {
 
 // PUT - Update commission payment status
 export async function PUT(request, { params }) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "commission", "write");
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
     const { id } = await params;
     const commissionId = parseInt(id, 10);
 
@@ -121,7 +127,7 @@ export async function PUT(request, { params }) {
 
     if (paymentStatus) {
       updateData.paymentStatus = paymentStatus;
-
+      
       if (paymentStatus === "PAID") {
         updateData.paidAt = new Date();
         updateData.paidAmount = paidAmount || existingCommission.commissionAmount;

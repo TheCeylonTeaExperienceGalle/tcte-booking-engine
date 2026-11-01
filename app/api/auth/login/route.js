@@ -31,8 +31,16 @@ export async function POST(request) {
     // Fetch the user and verify credentials without leaking which check failed.
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, password: true, role: true, name: true },
+      select: { id: true, email: true, password: true, role: true, name: true, isActive: true },
     });
+    
+    if (user && !user.isActive) {
+      return NextResponse.json(
+        { error: "Account is deactivated" },
+        { status: 403 }
+      );
+    }
+
     const isValid = user
       ? await comparePassword(password, user.password)
       : false;
@@ -45,7 +53,7 @@ export async function POST(request) {
     }
 
     if (!user.id || !user.email) {
-      console.error("User record missing required fields");
+      console.error("User record missing required fields", user);
       return NextResponse.json(
         { error: "User record is incomplete" },
         { status: 500 }

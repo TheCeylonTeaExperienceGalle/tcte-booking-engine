@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requirePermission } from "@/lib/auth";
 
 const API_KEY = process.env.BOOKINGS_REPORT_API_KEY;
 
@@ -10,20 +11,21 @@ function unauthorizedResponse() {
   );
 }
 
-function isAuthorized(request) {
-  if (!API_KEY) {
-    console.error("BOOKINGS_REPORT_API_KEY is not configured");
-    return false;
-  }
-
+async function isAuthorized(request) {
   const authHeader = request.headers.get("authorization") || "";
   const [scheme, token] = authHeader.split(" ");
 
-  return scheme === "Bearer" && token === API_KEY;
+  if (API_KEY && scheme === "Bearer" && token === API_KEY) {
+    return true;
+  }
+
+  const perm = await requirePermission(request, "bookings", "read");
+  return perm.authorized === true;
 }
 
 export async function GET(request) {
-  if (!isAuthorized(request)) {
+  const authorized = await isAuthorized(request);
+  if (!authorized) {
     return unauthorizedResponse();
   }
 

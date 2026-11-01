@@ -12,12 +12,28 @@ model User {
     email         String         @unique
     password      String
     name          String?
-    role          String         @default("user")
+    
+    roleId        Int?
+    role          Role?          @relation(fields: [roleId], references: [id])
+    isActive      Boolean        @default(true)
+    
     createdAt     DateTime       @default(now())
     updatedAt     DateTime       @updatedAt
     refreshTokens RefreshToken[]
 
     @@map("users")
+}
+
+model Role {
+    id          Int       @id @default(autoincrement())
+    name        String    @unique
+    permissions Json      @default("{}")
+    isActive    Boolean   @default(true)
+    users       User[]
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+
+    @@map("roles")
 }
 
 model RefreshToken {
@@ -42,6 +58,7 @@ enum LeaderRole {
 enum LeaderStatus {
     ACTIVE
     DEACTIVATED
+    PENDING
 }
 
 model Leader {
@@ -84,6 +101,7 @@ model Location {
     id        Int       @id @default(autoincrement())
     name      String
     address   String?
+    isActive  Boolean   @default(true)
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
     deletedAt DateTime?
@@ -102,6 +120,7 @@ model Program {
     locationId  Int
     location    Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
     seats       Int
+    price       Float     @default(0)
     isActive    Boolean   @default(true)
     createdAt   DateTime  @default(now())
     updatedAt   DateTime  @updatedAt
@@ -196,8 +215,8 @@ model Booking {
     paymentId   Int
     payment     Payment       @relation(fields: [paymentId], references: [id], onDelete: Cascade)
     status      BookingStatus @default(PENDING)
+    source      String        @default("ONLINE")
     additionalNotes String?
-    checkoutAttemptId String? @unique
     createdAt   DateTime      @default(now())
     updatedAt   DateTime      @updatedAt
     deletedAt   DateTime?
@@ -331,7 +350,7 @@ model DiscountRule {
     description     String?
     sessionIds      String    // JSON array of session IDs that trigger this discount e.g., "[1,2,3]"
     discountType    DiscountType @default(PERCENTAGE)
-    discountValue   Float     // Percentage off, or fixed currency amount off the gross
+    discountValue   Float     // Percentage or fixed amount
     priority        Int       @default(0) // Higher priority rules are applied first
     isActive        Boolean   @default(true)
     createdAt       DateTime  @default(now())
