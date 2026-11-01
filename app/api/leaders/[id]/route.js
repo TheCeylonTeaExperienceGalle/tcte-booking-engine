@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonAuthError, requireAdmin } from "@/lib/security/auth";
+import { requirePermission } from "@/lib/auth";
 
 export async function PUT(request, { params }) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "leaders", "write");
+    if (!authCheck.authorized) {
+      return NextResponse.json(
+        { error: authCheck.error },
+        { status: authCheck.status }
+      );
+    }
+
     const { id: idParam } = await params;
     const id = parseInt(idParam);
     const body = await request.json();
@@ -17,7 +22,7 @@ export async function PUT(request, { params }) {
     });
 
     if (!existingLeader) {
-      return NextResponse.json({ error: "Leader not found" }, { status: 404 });
+      return NextResponse.json({ error: "Travel Agent not found" }, { status: 404 });
     }
 
     const data = {};
@@ -41,10 +46,15 @@ export async function PUT(request, { params }) {
 
     // Handle Status Change
     if (status) {
-        data.status = status; // Expecting "ACTIVE" or "DEACTIVATED"
+        data.status = status; // Expecting "ACTIVE", "DEACTIVATED", or "PENDING"
         if (status === "DEACTIVATED") {
             data.role = "USER";
             data.promoteCode = null;
+        } else if (status === "ACTIVE") {
+            const currentRole = data.role || existingLeader.role;
+            if (currentRole === "LEADER" && !existingLeader.promoteCode && !data.promoteCode) {
+                data.promoteCode = generatePromoCode(data.name || existingLeader.name || "AGT");
+            }
         }
     }
 
@@ -62,10 +72,15 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "leaders", "write");
+    if (!authCheck.authorized) {
+      return NextResponse.json(
+        { error: authCheck.error },
+        { status: authCheck.status }
+      );
+    }
+
     const { id: idParam } = await params;
     const id = parseInt(idParam);
 
@@ -74,7 +89,7 @@ export async function DELETE(request, { params }) {
     });
 
     if (!existingLeader) {
-      return NextResponse.json({ error: "Leader not found" }, { status: 404 });
+      return NextResponse.json({ error: "Travel Agent not found" }, { status: 404 });
     }
 
     await prisma.leader.update({
@@ -82,10 +97,10 @@ export async function DELETE(request, { params }) {
       data: { deletedAt: new Date() },
     });
 
-    return NextResponse.json({ message: "Leader deleted successfully" });
+    return NextResponse.json({ message: "Travel Agent deleted successfully" });
   } catch (error) {
-    console.error("Delete leader error", error);
-    return NextResponse.json({ error: "Failed to delete leader" }, { status: 500 });
+    console.error("Delete travel agent error", error);
+    return NextResponse.json({ error: "Failed to delete travel agent" }, { status: 500 });
   }
 }
 

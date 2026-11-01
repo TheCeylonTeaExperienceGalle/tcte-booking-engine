@@ -1,71 +1,62 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonAuthError, requireAdmin } from "@/lib/security/auth";
+import { requirePermission } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-function deriveStatus(lastSessionDate, sessionsCount) {
-  if (!sessionsCount || !lastSessionDate) {
-    return "No Sessions";
-  }
-
-  const now = new Date();
-  const lastSession = new Date(lastSessionDate);
-
-  if (Number.isNaN(lastSession.getTime())) {
-    return "No Sessions";
-  }
-
-  const diffMilliseconds = lastSession.getTime() - now.getTime();
-  const diffDays = diffMilliseconds / (1000 * 60 * 60 * 24);
-
-  if (diffDays >= 1) {
-    return "Upcoming";
-  }
-
-  const pastDays = Math.abs(diffDays);
-
-  if (pastDays <= 7) {
-    return "Active";
-  }
-
-  if (pastDays <= 21) {
-    return "Paused";
-  }
-
-  return "At Risk";
-}
-
 export async function GET(request) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
-    const customers = await prisma.customer.findMany({
+    const authCheck = await requirePermission(request, "customers", "read");
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search");
+
+    // Fetch all customers who are not soft-deleted
+    const rawCustomers = await prisma.customer.findMany({
       where: {
         deletedAt: null,
-        leader: {
-          deletedAt: null,
-        },
       },
       include: {
-        leader: true,
+        leader: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            promoteCode: true,
+          },
+        },
         bookingItems: {
           where: {
             booking: {
               deletedAt: null,
             },
-            session: {
-              deletedAt: null,
-              program: {
-                deletedAt: null,
-              },
-            },
           },
           include: {
+            booking: {
+              select: {
+                id: true,
+                bookedDate: true,
+                status: true,
+                amount: true,
+                source: true,
+                payment: {
+                  select: {
+                    orderId: true,
+                  },
+                },
+              },
+            },
             session: {
               include: {
-                program: true,
+                program: {
+                  select: {
+                    title: true,
+                  },
+                },
               },
             },
           },
@@ -75,103 +66,192 @@ export async function GET(request) {
         },
       },
       orderBy: {
-        name: "asc",
+        createdAt: "desc",
       },
     });
 
-    const leaderGroups = new Map();
+    /**
+     * Deduplication Rules:
+     * - Do NOT merge on email alone!
+     * - Merge ONLY on matching ID/Passport (excluding "AGENT" placeholder)
+     * - OR merge on (email + name) matching together
+     * - Keep distinct otherwise
+     */
+    const customerMap = new Map();
 
-    customers.forEach((customer) => {
-      const leader = customer.leader;
-      if (!leader) {
-        return;
+    for (const cust of rawCustomers) {
+      const cleanName = (cust.name || "").trim();
+      const cleanEmail = (cust.email || "").trim().toLowerCase();
+      const cleanNic = (cust.nic || "").trim().toUpperCase();
+      const cleanPhone = (cust.phone || "").trim();
+
+      let dedupKey = "";
+      if (cleanNic && cleanNic !== "AGENT") {
+        // Merge on matching ID/Passport (excluding the "AGENT" placeholder)
+        dedupKey = `nic:${cleanNic}`;
+      } else if (cleanEmail && cleanName) {
+        // Merge on matching email PLUS name
+        dedupKey = `email_name:${cleanEmail}::${cleanName.toLowerCase()}`;
+      } else {
+        // Distinct record
+        dedupKey = `id:${cust.id}`;
       }
 
-      const resolvedLeaderName =
-        (leader.name && leader.name.trim()) || leader.email || `Leader #${leader.id}`;
-
-      const entry = leaderGroups.get(leader.id) || {
-        leaderId: leader.id,
-        leaderName: resolvedLeaderName,
-        leaderEmail: leader.email,
-        leaderRole: leader.role,
-        totalSessions: 0,
-        latestSessionDate: null,
-        customers: [],
-      };
-
-      if (!entry.leaderName) {
-        entry.leaderName = resolvedLeaderName;
-      }
-      if (!entry.leaderEmail) {
-        entry.leaderEmail = leader.email;
-      }
-      if (!entry.leaderRole) {
-        entry.leaderRole = leader.role;
+      if (!customerMap.has(dedupKey)) {
+        customerMap.set(dedupKey, {
+          id: cust.id,
+          name: cleanName,
+          email: cust.email || "",
+          phone: cleanPhone,
+          nic: cust.nic || "",
+          leader: cust.leader || null,
+          bookingIds: new Set(),
+          bookingHistory: [],
+          lastBookingDate: null,
+        });
       }
 
-      const { bookingItems } = customer;
-      const sessionsCount = bookingItems.length;
-      const lastBookingItem = bookingItems[0];
-      const lastSessionDate = lastBookingItem?.date ?? null;
-      const programTitle = lastBookingItem?.session?.program?.title ?? null;
+      const profile = customerMap.get(dedupKey);
 
-      entry.customers.push({
-        customerId: customer.id,
-        customerName: customer.name,
-        customerEmail: customer.email,
-        sessionsCount,
-        programTitle,
-        lastSessionDate,
-        status: deriveStatus(lastSessionDate, sessionsCount),
-      });
+      // Keep latest non-empty contact info
+      if (!profile.name && cleanName) profile.name = cleanName;
+      if (!profile.phone && cleanPhone) profile.phone = cleanPhone;
+      if (!profile.nic && cust.nic) profile.nic = cust.nic;
+      if (!profile.leader && cust.leader) profile.leader = cust.leader;
 
-      entry.totalSessions += sessionsCount;
+      // Aggregate bookings from bookingItems
+      for (const item of cust.bookingItems) {
+        if (!item.booking) continue;
+        const bId = item.booking.id;
 
-      if (lastSessionDate) {
-        const currentLatest = entry.latestSessionDate
-          ? new Date(entry.latestSessionDate)
-          : null;
-        const candidate = new Date(lastSessionDate);
-
-        if (!Number.isNaN(candidate.getTime())) {
-          if (!currentLatest || candidate > currentLatest) {
-            entry.latestSessionDate = lastSessionDate;
+        const bookingDate = item.booking.bookedDate || item.date;
+        if (bookingDate) {
+          const d = new Date(bookingDate);
+          if (!Number.isNaN(d.getTime())) {
+            if (!profile.lastBookingDate || d > new Date(profile.lastBookingDate)) {
+              profile.lastBookingDate = d.toISOString();
+            }
           }
         }
-      }
 
-      leaderGroups.set(leader.id, entry);
+        if (!profile.bookingIds.has(bId)) {
+          profile.bookingIds.add(bId);
+          profile.bookingHistory.push({
+            bookingId: bId,
+            orderId: item.booking.payment?.orderId || `RV-${bId}`,
+            date: bookingDate ? new Date(bookingDate).toISOString() : null,
+            status: item.booking.status,
+            source: item.booking.source || "ONLINE",
+            amount: item.booking.amount,
+            programTitle: item.session?.program?.title || item.session?.name || "Program Session",
+            sessionName: item.session?.name || "",
+          });
+        }
+      }
+    }
+
+    const profiles = Array.from(customerMap.values());
+
+    /**
+     * Likely Duplicates Detection (without auto-merging):
+     * Check if different customer profiles share:
+     * 1. Same non-empty email (different names/NIC)
+     * 2. Same non-empty phone (different names/NIC)
+     */
+    for (let i = 0; i < profiles.length; i++) {
+      const p1 = profiles[i];
+      p1.likelyDuplicates = [];
+
+      for (let j = 0; j < profiles.length; j++) {
+        if (i === j) continue;
+        const p2 = profiles[j];
+
+        const sameEmail =
+          p1.email &&
+          p2.email &&
+          p1.email.trim().toLowerCase() === p2.email.trim().toLowerCase();
+
+        const p1Digits = (p1.phone || "").replace(/\D/g, "");
+        const p2Digits = (p2.phone || "").replace(/\D/g, "");
+        const samePhone =
+          p1Digits.length >= 7 &&
+          p2Digits.length >= 7 &&
+          (p1Digits === p2Digits ||
+            p1Digits.endsWith(p2Digits.slice(-9)) ||
+            p2Digits.endsWith(p1Digits.slice(-9)));
+
+        if (sameEmail || samePhone) {
+          const reasons = [];
+          if (sameEmail) reasons.push(`Shared Email: ${p2.email}`);
+          if (samePhone) reasons.push(`Shared Phone: ${p2.phone}`);
+
+          p1.likelyDuplicates.push({
+            id: p2.id,
+            name: p2.name,
+            email: p2.email,
+            phone: p2.phone,
+            nic: p2.nic,
+            reason: reasons.join(", "),
+          });
+        }
+      }
+    }
+
+    // Convert to response list
+    let customersList = profiles.map((p) => ({
+      id: p.id,
+      name: p.name,
+      email: p.email,
+      phone: p.phone,
+      nic: p.nic,
+      bookingsCount: p.bookingIds.size,
+      lastBookingDate: p.lastBookingDate,
+      leaderId: p.leader?.id || null,
+      leaderName: p.leader?.role === "LEADER" ? p.leader.name : "Direct",
+      leaderRole: p.leader?.role || "USER",
+      leaderPromoteCode: p.leader?.role === "LEADER" ? (p.leader.promoteCode || null) : null,
+      affiliatedAgent: p.leader?.role === "LEADER" ? p.leader.name : null,
+      likelyDuplicates: p.likelyDuplicates,
+      bookingHistory: p.bookingHistory.sort((a, b) => {
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      }),
+    }));
+
+    // Search filter if provided
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      customersList = customersList.filter((c) => {
+        return (
+          (c.name || "").toLowerCase().includes(q) ||
+          (c.email || "").toLowerCase().includes(q) ||
+          (c.phone || "").toLowerCase().includes(q) ||
+          (c.nic || "").toLowerCase().includes(q) ||
+          (c.affiliatedAgent || "").toLowerCase().includes(q)
+        );
+      });
+    }
+
+    // Sort by latest booking date descending, then name
+    customersList.sort((a, b) => {
+      if (a.lastBookingDate && b.lastBookingDate) {
+        return new Date(b.lastBookingDate).getTime() - new Date(a.lastBookingDate).getTime();
+      }
+      if (a.lastBookingDate) return -1;
+      if (b.lastBookingDate) return 1;
+      return (a.name || "").localeCompare(b.name || "");
     });
 
-    const leaders = Array.from(leaderGroups.values())
-      .map((entry) => {
-        const leaderName =
-          (entry.leaderName && entry.leaderName.trim()) ||
-          entry.leaderEmail ||
-          `Leader #${entry.leaderId}`;
-
-        return {
-          leaderId: entry.leaderId,
-          leaderName,
-          leaderEmail: entry.leaderEmail,
-          leaderRole: entry.leaderRole,
-          totalCustomers: entry.customers.length,
-          totalSessions: entry.totalSessions,
-          latestSessionDate: entry.latestSessionDate,
-          status: deriveStatus(entry.latestSessionDate, entry.totalSessions),
-          customers: entry.customers.sort((a, b) =>
-            a.customerName.localeCompare(b.customerName)
-          ),
-        };
-      })
-      .sort((a, b) => a.leaderName.localeCompare(b.leaderName));
-
-    return NextResponse.json({ leaders });
+    return NextResponse.json({
+      success: true,
+      customers: customersList,
+      total: customersList.length,
+    });
   } catch (error) {
-    console.error("Get customers error:", error);
+    console.error("Customers GET error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch customers" },
+      { success: false, error: "Failed to fetch customers" },
       { status: 500 }
     );
   }

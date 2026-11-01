@@ -43,6 +43,7 @@ export async function POST(request) {
         email: true,
         contact: true,
         promoteCode: true,
+        role: true,
       },
     });
 
@@ -55,6 +56,7 @@ export async function POST(request) {
         name,
         email,
         contact: contact || null,
+        role: "USER",
       },
       select: {
         id: true,
@@ -62,6 +64,7 @@ export async function POST(request) {
         email: true,
         contact: true,
         promoteCode: true,
+        role: true,
       },
     });
 

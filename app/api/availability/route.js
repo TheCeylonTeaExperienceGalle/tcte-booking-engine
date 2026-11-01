@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { buildDateRange, getSessionAvailability } from "@/lib/availability";
-import { jsonAuthError, requireAdmin } from "@/lib/security/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
     const { searchParams } = new URL(request.url);
     const sessionIdParam = searchParams.get("sessionId");
@@ -69,10 +65,7 @@ export async function GET(request) {
   }
 }
 
-export async function POST(request) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
+export async function POST() {
   return NextResponse.json(
     { error: "Manual availability overrides are no longer supported" },
     { status: 410 }

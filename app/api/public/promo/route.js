@@ -31,7 +31,10 @@ export async function GET(request) {
       select: {
         id: true,
         name: true,
+        email: true,
+        contact: true,
         promoteCode: true,
+        status: true,
       },
     });
 
@@ -39,6 +42,20 @@ export async function GET(request) {
       return NextResponse.json(
         { error: "Promo code not found" },
         { status: 404 }
+      );
+    }
+
+    if (leader.status === "PENDING") {
+      return NextResponse.json(
+        { error: "This Travel Agent account is pending admin verification." },
+        { status: 403 }
+      );
+    }
+
+    if (leader.status === "DEACTIVATED") {
+      return NextResponse.json(
+        { error: "This Agent account has been locked. Please contact support." },
+        { status: 403 }
       );
     }
 

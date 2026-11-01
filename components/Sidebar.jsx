@@ -27,80 +27,15 @@ import {
   User,
 } from "lucide-react";
 
-const sidebarLinks = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    label: "Profile",
-    href: "/dashboard/profile",
-    icon: User,
-  },
-  {
-    label: "Locations",
-    href: "/dashboard/locations",
-    icon: MapPin,
-  },
-  {
-    label: "Program Settings",
-    icon: Settings,
-    children: [
-      {
-        label: "Programs",
-        href: "/dashboard/programs",
-        icon: BookOpen,
-      },
-      {
-        label: "Sessions",
-        href: "/dashboard/sessions",
-        icon: Calendar,
-      },
-      {
-        label: "Session Types",
-        href: "/dashboard/session-types",
-        icon: Layers3,
-      },
-      {
-        label: "Discount Rules",
-        href: "/dashboard/discount-rules",
-        icon: Tag,
-      },
-    ],
-  },
-  {
-    label: "Bookings",
-    href: "/dashboard/bookings",
-    icon: Calendar,
-  },
-  {
-    label: "Customers",
-    href: "/dashboard/customers",
-    icon: Users,
-  },
-  {
-    label: "Leaders",
-    href: "/dashboard/leaders",
-    icon: Users,
-  },
-  {
-    label: "Commission",
-    icon: DollarSign,
-    children: [
-      {
-        label: "Commission Rules",
-        href: "/dashboard/commission-rules",
-        icon: Percent,
-      },
-      {
-        label: "Affiliate Earnings",
-        href: "/dashboard/affiliate-earnings",
-        icon: DollarSign,
-      },
-    ],
-  },
-];
+import { SIDEBAR_MENU_CONFIG } from "@/lib/menuConfig";
+
+const sidebarLinks = SIDEBAR_MENU_CONFIG.map((item) => ({
+  ...item,
+  module: item.key,
+  children: item.children
+    ? item.children.map((c) => ({ ...c, module: c.key }))
+    : undefined,
+}));
 
 export default function Sidebar({
   user,
@@ -181,7 +116,7 @@ export default function Sidebar({
             <Link href="/dashboard" className={cn("flex items-center", isCollapsed ? "justify-center" : "space-x-3")}>
               <Image
                 src="/image/logo/logo.png"
-                alt="The Ceylon Tea Experience"
+                alt="Reviva logo"
                 width={200}
                 height={200}
                 className=" object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110 filter brightness-0"
@@ -221,12 +156,41 @@ export default function Sidebar({
           {/* Navigation Links */}
           <nav className="flex-1 overflow-y-auto px-2 py-4">
             <ul className="space-y-1">
-              {sidebarLinks.map((link) => {
+              {sidebarLinks
+                .filter((link) => {
+                  if (!link.module) return true;
+                  if (user?.role?.name?.toLowerCase() === "admin") return true;
+                  const isGroup = Array.isArray(link.children);
+                  if (isGroup) {
+                    const parentPerm = user?.role?.permissions?.[link.module];
+                    const hasParentAccess = Boolean(parentPerm?.read || parentPerm?.write);
+                    const hasChildAccess = link.children.some(child => {
+                      const childPerm = user?.role?.permissions?.[child.module];
+                      return Boolean(childPerm?.read || childPerm?.write);
+                    });
+                    return hasParentAccess || hasChildAccess;
+                  }
+                  const perm = user?.role?.permissions?.[link.module];
+                  return Boolean(perm?.read || perm?.write);
+                })
+                .map((link) => {
                 const Icon = link.icon;
                 const isGroup = Array.isArray(link.children);
 
+                let visibleChildren = [];
                 if (isGroup) {
-                  const isGroupActive = link.children.some((child) =>
+                   visibleChildren = link.children.filter(child => {
+                      if (!child.module) return true;
+                      if (user?.role?.name?.toLowerCase() === "admin") return true;
+                      const parentPerm = user?.role?.permissions?.[link.module];
+                      const childPerm = user?.role?.permissions?.[child.module];
+                      return Boolean(childPerm?.read || childPerm?.write || parentPerm?.read || parentPerm?.write);
+                   });
+                   if (visibleChildren.length === 0) return null; // Hide parent if no children visible
+                }
+
+                if (isGroup) {
+                  const isGroupActive = visibleChildren.some((child) =>
                     pathname.startsWith(child.href)
                   );
                   const isExpanded =
@@ -278,7 +242,7 @@ export default function Sidebar({
                           isExpanded ? "mt-1" : "hidden"
                         )}
                       >
-                        {link.children.map((child) => {
+                        {visibleChildren.map((child) => {
                           const ChildIcon = child.icon;
                           const isActive =
                             pathname === child.href ||

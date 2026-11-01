@@ -5,30 +5,55 @@ const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();
 
-function shouldAllowSeed(env = process.env) {
-  return !(env.NODE_ENV === "production" && env.ALLOW_SEED !== "true");
-}
-
 async function main() {
-  if (!shouldAllowSeed()) {
-    throw new Error(
-      "Refusing to seed in production. Set ALLOW_SEED=true only for an authorized local/test restore."
-    );
-  }
+  // Seed roles
+  const adminRole = await prisma.role.upsert({
+    where: { name: "admin" },
+    update: {},
+    create: {
+      name: "admin",
+      permissions: {
+        dashboard: { read: true, write: true },
+        locations: { read: true, write: true },
+        programs: { read: true, write: true },
+        bookings: { read: true, write: true },
+        customers: { read: true, write: true },
+        leaders: { read: true, write: true },
+        commission: { read: true, write: true }
+      }
+    }
+  });
 
-  // Seed users — local fixtures only. Do not use these accounts in production.
+  const userRole = await prisma.role.upsert({
+    where: { name: "user" },
+    update: {},
+    create: {
+      name: "user",
+      permissions: {
+        dashboard: { read: true, write: false },
+        locations: { read: true, write: false },
+        programs: { read: true, write: false },
+        bookings: { read: true, write: false },
+        customers: { read: true, write: false },
+        leaders: { read: true, write: false },
+        commission: { read: true, write: false }
+      }
+    }
+  });
+
+  // Seed users
   const users = [
-    { email: "admin@example.com", name: "Admin User", role: "admin", password: "Password123!" },
-    { email: "leader@example.com", name: "Leader User", role: "user", password: "Password123!" },
-    { email: "user@example.com", name: "Regular User", role: "user", password: "Password123!" },
+    { email: "admin@example.com", name: "Admin User", roleId: adminRole.id, password: "Password123!" },
+    { email: "leader@example.com", name: "Leader User", roleId: userRole.id, password: "Password123!" },
+    { email: "user@example.com", name: "Regular User", roleId: userRole.id, password: "Password123!" },
   ];
 
   for (const u of users) {
     const hashed = await bcrypt.hash(u.password, 10);
     await prisma.user.upsert({
       where: { email: u.email },
-      update: { name: u.name, role: u.role, password: hashed },
-      create: { email: u.email, name: u.name, role: u.role, password: hashed },
+      update: { name: u.name, roleId: u.roleId, password: hashed },
+      create: { email: u.email, name: u.name, roleId: u.roleId, password: hashed },
     });
   }
 

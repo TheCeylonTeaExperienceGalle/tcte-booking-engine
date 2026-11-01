@@ -1,22 +1,31 @@
 import { NextResponse } from "next/server";
+import { createHash } from "crypto";
 import prisma from "@/lib/prisma";
-import {
-  amountsMatch,
-  bookingStatusFromPaymentStatus,
-  canTransitionPaymentStatus,
-  computePayHereSignature,
-  currenciesMatch,
-  merchantsMatch,
-  resolvePayHerePaymentStatus,
-  sanitizeNotifyMetadata,
-  signaturesMatch,
-} from "@/lib/security/payhere";
 
 export const dynamic = "force-dynamic";
+
+function md5Upper(value) {
+  return createHash("md5").update(String(value)).digest("hex").toUpperCase();
+}
 
 function parseNumber(value) {
   const numeric = Number(value);
   return Number.isNaN(numeric) ? null : numeric;
+}
+
+function resolveStatus(statusCode) {
+  switch (statusCode) {
+    case 2:
+      return "SUCCESS";
+    case 0:
+      return "PENDING";
+    case -1:
+      return "CANCELED";
+    case -2:
+    case -3:
+    default:
+      return "FAILED";
+  }
 }
 
 export async function POST(request) {
@@ -37,27 +46,18 @@ export async function POST(request) {
 
     const statusCode = parseInt(statusCodeRaw, 10);
     const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET;
-    const configuredMerchantId = process.env.PAYHERE_MERCHANT_ID;
 
-    if (!merchantSecret || !configuredMerchantId) {
-      console.error("PayHere notify missing merchant configuration");
+    if (!merchantSecret) {
+      console.error("PayHere notify missing merchant secret env");
       return NextResponse.json({ received: false }, { status: 500 });
     }
 
-    if (!merchantsMatch(merchantId, configuredMerchantId)) {
-      return NextResponse.json({ received: false }, { status: 400 });
-    }
+    const localMd5 = md5Upper(
+      `${merchantId}${orderId}${payhereAmount}${payhereCurrency}${statusCode}${md5Upper(merchantSecret)}`
+    );
 
-    const localMd5 = computePayHereSignature({
-      merchantId,
-      orderId,
-      amount: payhereAmount,
-      currency: payhereCurrency,
-      statusCode,
-      merchantSecret,
-    });
-
-    if (!signaturesMatch(localMd5, md5sig)) {
+    if (localMd5 !== md5sig) {
+      console.warn("PayHere signature mismatch", { orderId });
       return NextResponse.json({ received: false }, { status: 400 });
     }
 
@@ -68,69 +68,59 @@ export async function POST(request) {
       },
       select: {
         id: true,
-        status: true,
-        amount: true,
-        currency: true,
         method: true,
         metadata: true,
         payhereStatusMsg: true,
         bookings: {
           select: {
             id: true,
-            status: true,
           },
         },
       },
     });
 
     if (!payment) {
+      console.warn("PayHere payment not found for order", { orderId });
       return NextResponse.json({ received: true });
     }
 
-    if (!amountsMatch(payhereAmount, payment.amount)) {
-      return NextResponse.json({ received: false }, { status: 400 });
-    }
+    const nextStatus = resolveStatus(statusCode);
 
-    if (!currenciesMatch(payhereCurrency, payment.currency)) {
-      return NextResponse.json({ received: false }, { status: 400 });
-    }
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: nextStatus,
+        payherePaymentId: payload.payment_id || null,
+        payhereStatusCode: parseNumber(statusCodeRaw),
+        payhereMd5Sig: md5sig,
+        method: payload.method || payment.method,
+        payhereStatusMsg: payload.status_message || payment.payhereStatusMsg,
+        metadata: {
+          ...(payment.metadata ?? {}),
+          notification: {
+            receivedAt: new Date().toISOString(),
+            payload,
+          },
+        },
+      },
+    });
 
-    const nextStatus = resolvePayHerePaymentStatus(statusCode);
+    if (payment.bookings.length > 0) {
+      const bookingId = payment.bookings[0].id;
+      const bookingStatus = nextStatus === "SUCCESS" ? "CONFIRMED" : nextStatus === "PENDING" ? "PENDING" : "CANCELLED";
 
-    if (!canTransitionPaymentStatus(payment.status, nextStatus)) {
-      return NextResponse.json({ received: true });
-    }
-
-    const bookingStatus = bookingStatusFromPaymentStatus(nextStatus);
-
-    await prisma.$transaction(async (tx) => {
-      await tx.payment.update({
-        where: { id: payment.id },
+      await prisma.booking.update({
+        where: { id: bookingId },
         data: {
-          status: nextStatus,
-          payherePaymentId: payload.payment_id || null,
-          payhereStatusCode: parseNumber(statusCodeRaw),
-          payhereMd5Sig: md5sig,
-          method: payload.method || payment.method,
-          payhereStatusMsg: payload.status_message || payment.payhereStatusMsg,
-          metadata: sanitizeNotifyMetadata(payment.metadata, payload),
+          status: bookingStatus,
+          updatedAt: new Date(),
         },
       });
-
-      if (payment.bookings.length > 0) {
-        await tx.booking.update({
-          where: { id: payment.bookings[0].id },
-          data: {
-            status: bookingStatus,
-            updatedAt: new Date(),
-          },
-        });
-      }
-    });
+    }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("PayHere notify handler error");
+    console.error("PayHere notify handler error", error);
     return NextResponse.json({ received: false }, { status: 500 });
   }
 }

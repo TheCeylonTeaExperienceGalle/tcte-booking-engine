@@ -1,18 +1,104 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { verifyAccessToken } from "@/lib/jwt";
 import { comparePassword, hashPassword } from "@/lib/auth";
-import { jsonAuthError, requireAuthenticatedUser } from "@/lib/security/auth";
+
+export async function GET(request) {
+  try {
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { error: "Missing authorization token" },
+        { status: 401 }
+      );
+    }
+    const token = authHeader.split(" ")[1];
+
+    let decoded;
+    try {
+      decoded = verifyAccessToken(token);
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 401 }
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        isActive: true,
+        role: true,
+      },
+    });
+
+    if (!user || !user.isActive) {
+      return NextResponse.json(
+        { error: "Account deactivated or not found" },
+        { status: 403 }
+      );
+    }
+
+    if (user.role && user.role.isActive === false) {
+      return NextResponse.json(
+        { error: "Assigned role is deactivated" },
+        { status: 403 }
+      );
+    }
+
+    // Role-based profile permissions
+    const roleName = user.role?.name?.toLowerCase();
+    if (roleName !== "admin") {
+      const perms = user.role?.permissions || {};
+      const profilePerm = perms.profile;
+      if (profilePerm && profilePerm.read === false && profilePerm.write === false) {
+        return NextResponse.json(
+          { error: "Profile access is restricted for your role" },
+          { status: 403 }
+        );
+      }
+    }
+
+    return NextResponse.json({ user });
+  } catch (error) {
+    console.error("Profile GET error", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function PUT(request) {
-  const auth = requireAuthenticatedUser(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
-    const userId = auth.user.id;
+    // 1. Authenticate Request
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { error: "Missing authorization token" },
+        { status: 401 }
+      );
+    }
+    const token = authHeader.split(" ")[1];
+
+    let decoded;
+    try {
+      decoded = verifyAccessToken(token);
+    } catch (err) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 401 }
+      );
+    }
+
+    const userId = decoded.userId;
 
     // 2. Parse Payload
     const body = await request.json();
-    const { email, currentPassword, newPassword } = body;
+    const { name, email, username, currentPassword, newPassword } = body;
 
     // Simple validation
     if (!currentPassword) {
@@ -23,9 +109,25 @@ export async function PUT(request) {
     }
 
     // 3. Verify User and Current Password
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Check role permission for profile modification
+    const roleName = user.role?.name?.toLowerCase();
+    if (roleName !== "admin") {
+      const perms = user.role?.permissions || {};
+      const profilePerm = perms.profile;
+      if (profilePerm && profilePerm.write === false) {
+        return NextResponse.json(
+          { error: "Profile modification is not permitted for your role" },
+          { status: 403 }
+        );
+      }
     }
 
     const isPasswordValid = await comparePassword(
@@ -42,20 +144,24 @@ export async function PUT(request) {
 
     // 4. Prepare updates
     const updateData = {};
-    const normalizedEmail = email?.trim().toLowerCase();
+    if (name !== undefined) {
+      updateData.name = name.trim();
+    }
 
-    if (normalizedEmail && normalizedEmail !== user.email) {
-      // Check if email is already taken
+    const normalizedIdentifier = (username || email)?.trim().toLowerCase();
+
+    if (normalizedIdentifier && normalizedIdentifier !== user.email) {
+      // Check if username/email is already taken
       const existingEmailUser = await prisma.user.findUnique({
-        where: { email: normalizedEmail },
+        where: { email: normalizedIdentifier },
       });
       if (existingEmailUser) {
         return NextResponse.json(
-          { error: "Email is already in use" },
+          { error: "Username is already in use" },
           { status: 409 }
         );
       }
-      updateData.email = normalizedEmail;
+      updateData.email = normalizedIdentifier;
     }
 
     if (newPassword) {

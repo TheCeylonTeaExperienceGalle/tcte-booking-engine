@@ -14,12 +14,6 @@ import {
   hashRefreshToken,
   setRefreshTokenCookie,
 } from "@/lib/auth";
-import {
-  isJwtCredentialError,
-  RefreshAuthError,
-  RefreshRotationError,
-  rotateRefreshTokenRecord,
-} from "@/lib/security/refresh-rotation";
 
 function buildErrorResponse(message, code, status = 401) {
   return NextResponse.json(
@@ -48,7 +42,8 @@ export async function POST() {
     });
 
     if (!tokenRecord) {
-      throw new RefreshAuthError("Token not found", "refresh_token_not_found");
+      await clearRefreshTokenCookie(cookieStore);
+      return buildErrorResponse("Token not found", "refresh_token_not_found");
     }
 
     const matches = await compareRefreshToken(
@@ -56,37 +51,49 @@ export async function POST() {
       tokenRecord.hashedToken
     );
     if (!matches) {
-      throw new RefreshAuthError("Invalid token", "refresh_token_mismatch");
+      await clearRefreshTokenCookie(cookieStore);
+      return buildErrorResponse("Invalid token", "refresh_token_mismatch");
     }
 
     if (tokenRecord.revoked) {
-      throw new RefreshAuthError("Token revoked", "refresh_token_revoked");
+      await clearRefreshTokenCookie(cookieStore);
+      return buildErrorResponse("Token revoked", "refresh_token_revoked");
     }
 
     if (tokenRecord.expiresAt <= new Date()) {
-      throw new RefreshAuthError("Token expired", "refresh_token_expired");
+      await clearRefreshTokenCookie(cookieStore);
+      return buildErrorResponse("Token expired", "refresh_token_expired");
     }
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
+      include: { role: true },
     });
     if (!user) {
-      throw new RefreshAuthError("User not found", "user_not_found", {
-        status: 404,
-      });
+      await clearRefreshTokenCookie(cookieStore);
+      return buildErrorResponse("User not found", "user_not_found", 404);
     }
+
+    if (!user.isActive) {
+      await clearRefreshTokenCookie(cookieStore);
+      return buildErrorResponse("Account is deactivated", "account_deactivated", 403);
+    }
+
+    // Token rotation: delete the old token and mint a brand new pair.
+    await prisma.refreshToken.delete({ where: { id: tokenRecord.id } });
 
     const nextJti = randomUUID();
     const nextRefreshToken = generateRefreshToken(user.id, nextJti);
     const hashedNextToken = await hashRefreshToken(nextRefreshToken);
     const expiresAt = getRefreshTokenExpiryDate();
 
-    await rotateRefreshTokenRecord(prisma, {
-      currentTokenId: tokenRecord.id,
-      userId: user.id,
-      nextJti,
-      hashedNextToken,
-      expiresAt,
+    await prisma.refreshToken.create({
+      data: {
+        id: nextJti,
+        hashedToken: hashedNextToken,
+        userId: user.id,
+        expiresAt,
+      },
     });
 
     await setRefreshTokenCookie(cookieStore, nextRefreshToken);
@@ -94,7 +101,15 @@ export async function POST() {
     const accessToken = generateAccessToken(user.id, user.email, user.role);
 
     return NextResponse.json(
-      { accessToken },
+      {
+        accessToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+      },
       {
         headers: {
           "X-Auth-Status": "token_refreshed",
@@ -102,28 +117,8 @@ export async function POST() {
       }
     );
   } catch (error) {
-    if (error instanceof RefreshAuthError) {
-      if (error.clearCookie) {
-        await clearRefreshTokenCookie(cookieStore);
-      }
-      return buildErrorResponse(error.message, error.code, error.status);
-    }
-
-    if (error instanceof RefreshRotationError) {
-      console.error("Refresh rotation failed");
-      return buildErrorResponse("Unable to refresh session", error.code, 503);
-    }
-
-    if (isJwtCredentialError(error)) {
-      await clearRefreshTokenCookie(cookieStore);
-      return buildErrorResponse("Invalid token", "refresh_token_invalid");
-    }
-
-    console.error("Refresh error");
-    return buildErrorResponse(
-      "Unable to refresh session",
-      "refresh_internal_error",
-      503
-    );
+    console.error("Refresh error", error);
+    await clearRefreshTokenCookie(cookieStore);
+    return buildErrorResponse("Invalid token", "refresh_token_invalid");
   }
 }

@@ -25,6 +25,7 @@ export default function LocationForm({
   const [formData, setFormData] = useState({
     name: "",
     address: "",
+    isActive: true,
   });
 
   useEffect(() => {
@@ -33,11 +34,13 @@ export default function LocationForm({
         setFormData({
           name: initialData.name || "",
           address: initialData.address || "",
+          isActive: initialData.isActive !== undefined ? initialData.isActive : true,
         });
       } else {
         setFormData({
           name: "",
           address: "",
+          isActive: true,
         });
       }
       setError("");
@@ -121,6 +124,22 @@ export default function LocationForm({
                 placeholder="e.g. 123 Wellness St"
               />
             </div>
+            {initialData && (
+              <div className="flex items-center space-x-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={formData.isActive}
+                  onChange={(e) =>
+                    setFormData({ ...formData, isActive: e.target.checked })
+                  }
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                />
+                <Label htmlFor="isActive" className="cursor-pointer font-medium">
+                  Active (Uncheck to Inactivate)
+                </Label>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button

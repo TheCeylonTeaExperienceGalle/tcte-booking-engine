@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonAuthError, requireAdmin } from "@/lib/security/auth";
-import { buildLeaderSearchWhere } from "@/lib/security/leader-search";
+import { requirePermission } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -15,18 +14,35 @@ function resolveDisplayName(leader) {
   if (leader?.email) {
     return leader.email;
   }
-  return `Leader #${leader?.id}`;
+  return `Travel Agent #${leader?.id}`;
 }
 
 export async function GET(request) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "leaders", "read");
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
+    const role = searchParams.get("role");
 
-    const where = buildLeaderSearchWhere(query);
+    const where = {
+      deletedAt: null,
+    };
+
+    if (role && role !== "ALL") {
+      where.role = role;
+    }
+
+    if (query) {
+      where.OR = [
+        { name: { contains: query, mode: "insensitive" } },
+        { email: { contains: query, mode: "insensitive" } },
+        { promoteCode: { contains: query, mode: "insensitive" } },
+      ];
+    }
 
     const leaders = await prisma.leader.findMany({
       where,
@@ -71,10 +87,15 @@ function generatePromoCode(name) {
 }
 
 export async function POST(request) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "leaders", "write");
+    if (!authCheck.authorized) {
+      return NextResponse.json(
+        { error: authCheck.error },
+        { status: authCheck.status }
+      );
+    }
+
     const body = await request.json();
     const { name, email, contact, role } = body;
 

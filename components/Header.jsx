@@ -2,45 +2,78 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
-import { MAIN_WEBSITE_URL } from "@/lib/site";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 export default function Header() {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const navLinks = [
+    { href: "/", label: "Home" },
+    { href: "/about", label: "About" },
+    { href: "/services", label: "Services" },
+    { href: "/gallery", label: "Gallery" },
+    { href: "/contact", label: "Contact" },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-primary/20 bg-background/95 backdrop-blur-md">
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-500 ${
+        isScrolled
+          ? "bg-background/95 backdrop-blur-md shadow-xl border-b border-primary/20"
+          : "bg-background/80 backdrop-blur-sm"
+      }`}
+    >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <Link href="/book" className="flex items-center space-x-3">
+          {/* Enhanced Logo */}
+          <Link href="/" className="flex items-center space-x-3 group animate-fade-in-up hover-glow">
             <Image
               src="/image/logo/logo.png"
-              alt="The Ceylon Tea Experience"
-              width={180}
-              height={180}
-              className="object-contain drop-shadow-md filter brightness-0"
+              alt="Reviva logo"
+              width={200}
+              height={200}
+              className=" object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110 filter brightness-0"
               priority
               quality={70}
             />
+            
           </Link>
 
-          <nav className="hidden items-center gap-6 md:flex">
-            <Link
-              href="/book"
-              className="text-sm font-medium text-foreground hover:text-primary"
-            >
-              Book
-            </Link>
-            <a
-              href={MAIN_WEBSITE_URL}
-              className="text-sm font-medium text-muted-foreground hover:text-primary"
-            >
-              Back to main website
-            </a>
+          {/* Enhanced Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8 animate-fade-in-up stagger-children" style={{animationDelay: "0.2s"}}>
+            {navLinks.map((link, index) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="relative text-sm font-medium text-foreground hover:text-primary transition-all duration-300 hover:scale-105 hover-glow group"
+                style={{animationDelay: `${0.1 + index * 0.05}s`}}
+              >
+                {link.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-secondary transition-all duration-300 group-hover:w-full"></span>
+              </Link>
+            ))}
           </nav>
 
+          {/* Enhanced CTA Button */}
+          <div className="hidden md:block animate-fade-in-up" style={{animationDelay: "0.4s"}}>
+            <Button asChild className="animate-pulse-glow hover-lift transition-all duration-300 hover:scale-105">
+              <Link href="/book">Book Now</Link>
+            </Button>
+          </div>
+
+          {/* Mobile Menu Button */}
           <button
-            className="p-2 md:hidden"
+            className="md:hidden p-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -62,26 +95,28 @@ export default function Header() {
           </button>
         </div>
 
-        {isMobileMenuOpen ? (
-          <div className="border-t py-4 md:hidden">
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden py-4 border-t">
             <nav className="flex flex-col space-y-4">
-              <Link
-                href="/book"
-                className="text-sm font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Book
-              </Link>
-              <a
-                href={MAIN_WEBSITE_URL}
-                className="text-sm font-medium text-muted-foreground"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Back to main website
-              </a>
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <Button asChild className="w-full">
+                <Link href="/book" onClick={() => setIsMobileMenuOpen(false)}>
+                  Book Now
+                </Link>
+              </Button>
             </nav>
           </div>
-        ) : null}
+        )}
       </div>
     </header>
   );

@@ -2,17 +2,29 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import { clearRefreshTokenCookie } from "@/lib/auth";
-import { jsonAuthError, requireAuthenticatedUser } from "@/lib/security/auth";
+import { verifyAccessToken } from "@/lib/jwt";
 
 export async function POST(request) {
-  const auth = requireAuthenticatedUser(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
+  const authHeader =
+    request.headers.get("authorization") ||
+    request.headers.get("Authorization") ||
+    "";
   const cookieStore = await cookies();
 
+  if (!authHeader.startsWith("Bearer ")) {
+    return NextResponse.json(
+      { error: "Authorization header missing" },
+      { status: 401 }
+    );
+  }
+
+  const token = authHeader.replace("Bearer ", "").trim();
+
   try {
+    const payload = verifyAccessToken(token);
+
     await prisma.refreshToken.updateMany({
-      where: { userId: auth.user.id },
+      where: { userId: payload.userId },
       data: { revoked: true },
     });
 
@@ -20,9 +32,9 @@ export async function POST(request) {
 
     return NextResponse.json({ message: "Logged out from all devices" });
   } catch (error) {
-    console.error("Logout-all error");
+    console.error("Logout-all error", error);
     return NextResponse.json(
-      { error: "Unauthorized" },
+      { error: "Invalid or expired access token" },
       { status: 401 }
     );
   }

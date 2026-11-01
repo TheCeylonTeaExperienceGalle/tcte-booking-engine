@@ -1,25 +1,18 @@
 import { NextResponse } from "next/server";
 import { createHash } from "crypto";
 import prisma from "@/lib/prisma";
+import { sendBookingConfirmation } from "@/lib/email";
 import {
   buildDateRange,
   getSessionAvailability,
   lockSessions,
 } from "@/lib/availability";
-import {
-  calculateBookingPricing,
-  PricingError,
-} from "@/lib/pricing/booking-pricing";
-import { appendOrderIdToUrl } from "@/lib/payments/payhere-urls";
-import { isPayHereEnabled } from "@/lib/payments/payhere-enabled";
-import {
-  buildPublicBookingResponse,
-  isCheckoutAttemptUniqueConflict,
-  normalizeCheckoutAttemptId,
-} from "@/lib/bookings/checkout-attempt";
+import { isSessionPastInColombo } from "@/lib/dateUtils";
+import { requirePermission } from "@/lib/auth";
 
 const PAYMENT_TYPES = new Set(["Full", "Partial", "Later"]);
 const PAYMENT_PROVIDERS = new Set(["MANUAL", "PAYHERE"]);
+const DEFAULT_CURRENCY = "USD";
 const PAYHERE_DEFAULT_ACTION_URL =
   process.env.PAYHERE_CHECKOUT_URL ||
   (process.env.NODE_ENV === "production"
@@ -41,7 +34,7 @@ class ConcurrencyError extends Error {
   }
 }
 
-const MAX_RETRY_ATTEMPTS = 3;
+const MAX_RETRY_ATTEMPTS = 5;
 const INITIAL_RETRY_DELAY_MS = 100;
 
 async function sleep(ms) {
@@ -51,7 +44,7 @@ async function sleep(ms) {
 function isRetryableError(error) {
   const message = error?.message?.toLowerCase() || "";
   const code = error?.code || "";
-
+  
   // Deadlock detected
   if (message.includes("deadlock") || code === "40001") return true;
   // Lock wait timeout
@@ -60,14 +53,37 @@ function isRetryableError(error) {
   if (message.includes("could not serialize") || code === "40001") return true;
   // Concurrency error thrown by our code
   if (error instanceof ConcurrencyError) return true;
+  
+  // Unique constraint collision on auto-generated transactionId or orderId (Prisma P2002)
+  if (code === "P2002") {
+    const target = String(error?.meta?.target || "");
+    if (target.includes("transactionId") || message.includes("transactionid")) {
+      return true;
+    }
+  }
 
   return false;
 }
 
 export async function POST(request) {
-  let checkoutAttemptId = null;
   try {
     const payload = await request.json();
+    console.log("Received booking payload:", payload);
+
+    // Determine authenticated caller permission for admin source vs online booking
+    let isAuthorizedAdmin = false;
+    const authCheck = await requirePermission(request, "bookings", "write");
+    if (authCheck.authorized) {
+      isAuthorizedAdmin = true;
+    } else if (payload?.source === "ADMIN") {
+      return NextResponse.json(
+        { success: false, error: authCheck.error || "Forbidden: Authenticated bookings write permission required for ADMIN source" },
+        { status: 403 }
+      );
+    }
+
+    const effectiveSource = isAuthorizedAdmin && payload?.source === "ADMIN" ? "ADMIN" : "ONLINE";
+
     const validationError = validatePayload(payload);
 
     if (validationError) {
@@ -84,29 +100,19 @@ export async function POST(request) {
       selections,
       payment = {},
       customer = {},
-      checkoutAttemptId: rawCheckoutAttemptId,
+      status: requestedStatus,
     } = payload;
-
-    const parsedCheckoutAttemptId = normalizeCheckoutAttemptId(rawCheckoutAttemptId);
-    if (rawCheckoutAttemptId && !parsedCheckoutAttemptId) {
-      return NextResponse.json(
-        { success: false, error: "checkoutAttemptId must be a UUID" },
-        { status: 400 }
-      );
-    }
-    if (!parsedCheckoutAttemptId) {
-      return NextResponse.json(
-        { success: false, error: "checkoutAttemptId is required" },
-        { status: 400 }
-      );
-    }
-    checkoutAttemptId = parsedCheckoutAttemptId;
 
     const {
       paymentType,
+      amount: partialAmount,
+      paidAmount: explicitPaidAmount,
       provider: rawProvider,
       method,
+      full_payment_price,
       transactionId,
+      currency: paymentCurrency,
+      orderId: providedOrderId,
     } = payment;
 
     const normalizedProvider =
@@ -115,24 +121,8 @@ export async function POST(request) {
       ? normalizedProvider
       : "MANUAL";
 
-    if (paymentProvider === "PAYHERE" && !isPayHereEnabled()) {
-      return NextResponse.json(
-        { success: false, error: "Online payment is currently unavailable." },
-        { status: 400 }
-      );
-    }
-
-    const existingCheckout = await prisma.booking.findUnique({
-      where: { checkoutAttemptId },
-      include: { payment: true },
-    });
-    if (existingCheckout) {
-      return NextResponse.json(
-        await buildExistingCheckoutResponse(existingCheckout)
-      );
-    }
-
-    const bookingDate = new Date(bookedDate);
+    const rawDateStr = typeof bookedDate === "string" ? bookedDate.split("T")[0] : "";
+    const bookingDate = rawDateStr ? new Date(`${rawDateStr}T00:00:00.000Z`) : new Date(bookedDate);
     if (Number.isNaN(bookingDate.getTime())) {
       return NextResponse.json(
         { success: false, error: "Invalid bookedDate provided" },
@@ -148,21 +138,109 @@ export async function POST(request) {
       );
     }
 
-    const leader = await prisma.leader.findFirst({
-      where: { id: leaderId, deletedAt: null },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        contact: true,
-      },
-    });
+    let leader = null;
+    const parsedLeaderId = leaderId ? Number(leaderId) : null;
 
-    if (!leader) {
-      return NextResponse.json(
-        { success: false, error: "Leader not found" },
-        { status: 404 }
-      );
+    if (parsedLeaderId && !Number.isNaN(parsedLeaderId) && parsedLeaderId > 0) {
+      leader = await prisma.leader.findFirst({
+        where: { id: parsedLeaderId, deletedAt: null },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          contact: true,
+          status: true,
+          role: true,
+        },
+      });
+
+      if (!leader) {
+        return NextResponse.json(
+          { success: false, error: "Travel Agent not found" },
+          { status: 404 }
+        );
+      }
+
+      if (leader.role === "LEADER" && leader.status === "PENDING") {
+        return NextResponse.json(
+          { success: false, error: "This travel agent account is pending admin verification." },
+          { status: 403 }
+        );
+      }
+
+      if (leader.role === "LEADER" && leader.status === "DEACTIVATED") {
+        return NextResponse.json(
+          { success: false, error: "This travel agent account has been locked. Please contact support." },
+          { status: 403 }
+        );
+      }
+    } else {
+      // Direct booking without a travel agent: resolve or create a Direct Contact profile (role: USER)
+      const primaryGuest = customer?.email
+        ? customer
+        : selections?.[0]?.customers?.[0] || {};
+      const directName = (primaryGuest.name || "Direct Guest").trim();
+      const directEmail = (primaryGuest.email || "direct-booking@reviva.internal").trim().toLowerCase();
+      const directContact = (primaryGuest.phone || primaryGuest.contact || null)?.trim() || null;
+
+      leader = await prisma.leader.findFirst({
+        where: { email: directEmail, role: "USER", deletedAt: null },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          contact: true,
+          status: true,
+          role: true,
+        },
+      });
+
+      if (!leader) {
+        const existingAny = await prisma.leader.findFirst({
+          where: { email: directEmail },
+        });
+
+        const contactEmail = existingAny
+          ? `direct-${Date.now()}-${directEmail}`
+          : directEmail;
+
+        leader = await prisma.leader.create({
+          data: {
+            name: directName,
+            email: contactEmail,
+            contact: directContact,
+            role: "USER",
+            status: "ACTIVE",
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            contact: true,
+            status: true,
+            role: true,
+          },
+        });
+      }
+    }
+
+    const resolvedLeaderId = leader.id;
+
+    // Check for duplicate transactionId for manual payments
+    if (paymentProvider === "MANUAL" && transactionId && !transactionId.startsWith("Auto-generated")) {
+      const existingPayment = await prisma.payment.findUnique({
+        where: { transactionId: transactionId.trim() },
+        select: { id: true, orderId: true },
+      });
+      if (existingPayment) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Transaction reference "${transactionId.trim()}" has already been used for another booking. Please enter a unique transaction reference.`,
+          },
+          { status: 409 }
+        );
+      }
     }
 
     const sessionIds = [...new Set(selections.map((selection) => selection.sessionId))];
@@ -170,13 +248,23 @@ export async function POST(request) {
       where: { id: { in: sessionIds } },
       select: {
         id: true,
+        name: true,
         programId: true,
         startTime: true,
         endTime: true,
         price: true,
         specialPrice: true,
+        program: {
+          select: {
+            id: true,
+            title: true,
+            location: {
+              select: { id: true, name: true },
+            },
+          },
+        },
         sessionTypes: {
-          select: { id: true, price: true, specialPrice: true },
+          select: { id: true, name: true, price: true, specialPrice: true },
         },
       },
     });
@@ -188,7 +276,46 @@ export async function POST(request) {
       );
     }
 
+    // Enforce that all selected sessions belong to the same location (disallow all-location / multi-location bookings)
+    const distinctLocations = new Set(
+      sessions
+        .map((s) => s.program?.location?.id)
+        .filter((id) => id !== undefined && id !== null)
+    );
+
+    if (distinctLocations.size > 1) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Bookings cannot span across multiple locations. All selected sessions must belong to the same location.",
+        },
+        { status: 400 }
+      );
+    }
+
     const sessionMap = new Map(sessions.map((session) => [session.id, session]));
+
+    const programId = sessions[0]?.programId;
+    const program = programId
+      ? await prisma.program.findUnique({
+          where: { id: programId },
+          select: { id: true },
+        })
+      : null;
+
+    // Enforce that no selected session has already started or passed in Sri Lanka time
+    for (const selection of selections) {
+      const sess = sessionMap.get(selection.sessionId);
+      if (sess && isSessionPastInColombo(bookedDate, sess.startTime)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Session "${sess.name}" is unavailable (bookings close 4 hours before session start). Please choose an upcoming session.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     try {
       validateSessionConflicts(selections, sessionMap);
@@ -199,46 +326,148 @@ export async function POST(request) {
       );
     }
 
-    const programId = sessions[0]?.programId;
-    const discountRules = programId
-      ? await prisma.discountRule.findMany({
-          where: {
-            programId,
-            isActive: true,
-            deletedAt: null,
-          },
-          orderBy: { priority: "desc" },
-        })
-      : [];
-
     let pricing;
+
     try {
-      pricing = calculateBookingPricing({
-        selections,
-        sessionMap,
-        discountRules,
-        paymentType,
-        provider: paymentProvider,
-      });
+      pricing = calculatePrice(selections, sessionMap);
     } catch (pricingError) {
-      const status =
-        pricingError instanceof PricingError ? pricingError.status : 400;
       return NextResponse.json(
         { success: false, error: pricingError.message },
-        { status }
+        { status: 400 }
       );
     }
 
-    const {
-      fullTotal,
-      amountDueNow,
-      balance,
-      paymentStatus,
-      bookingStatus,
-      currency,
-    } = pricing;
+    const totalBaseAmount = pricing.reduce(
+      (sum, item) => sum + item.sessionBasePrice * item.seatsRequested,
+      0
+    );
+    const totalAddOnAmount = pricing.reduce(
+      (sum, item) => sum + item.sessionTypePrice * item.seatsRequested,
+      0
+    );
+    const perSeatBaseCombinationTotal = pricing.reduce(
+      (sum, item) => sum + item.sessionBasePrice,
+      0
+    );
+    const totalAmount = totalBaseAmount + totalAddOnAmount;
+    const seatCounts = selections.map((selection) => selection.seatsRequested || 0);
+    const seatsEligibleForDiscount =
+      seatCounts.length > 0 ? Math.min(...seatCounts) : 0;
 
-    const resolvedOrderId = generatePayHereOrderId(leaderId);
+    let discountAmount = 0;
+    const programPrice = 0;
+    const totalAmountWithProgramPrice = totalAmount;
+
+    // Fetch discount rules across all programs represented in the selections
+    const allProgramIds = Array.from(
+      new Set(
+        selections
+          .map((sel) => sessionMap.get(sel.sessionId)?.programId)
+          .filter(Boolean)
+      )
+    );
+
+    if (allProgramIds.length > 0) {
+      const discountRules = await prisma.discountRule.findMany({
+        where: {
+          programId: { in: allProgramIds },
+          isActive: true,
+          deletedAt: null,
+        },
+        orderBy: { priority: "desc" },
+      });
+
+      for (const pId of allProgramIds) {
+        const progSelections = selections.filter(
+          (sel) => sessionMap.get(sel.sessionId)?.programId === pId
+        );
+        const progSessionIds = progSelections.map((sel) => sel.sessionId);
+        const progSeatCounts = progSelections.map((sel) => sel.seatsRequested || 0);
+        const progSeats = progSeatCounts.length > 0 ? Math.min(...progSeatCounts) : 0;
+
+        if (progSeats <= 0) continue;
+
+        const programRules = discountRules.filter((r) => r.programId === pId);
+        const matchingRules = [];
+
+        for (const rule of programRules) {
+          let ruleSessionIds = [];
+          try {
+            ruleSessionIds = JSON.parse(rule.sessionIds || "[]")
+              .map((value) => Number(value))
+              .filter((value) => !Number.isNaN(value));
+          } catch {
+            ruleSessionIds = [];
+          }
+
+          if (
+            ruleSessionIds.length > 0 &&
+            ruleSessionIds.every((id) => progSessionIds.includes(id))
+          ) {
+            matchingRules.push({
+              rule,
+              requiredSessionCount: ruleSessionIds.length,
+              discountValue: rule.discountValue,
+              priority: rule.priority || 0,
+            });
+          }
+        }
+
+        // Sort matching rules: priority DESC, session count DESC (Combo II beats Combo I), discountValue DESC
+        matchingRules.sort((a, b) => {
+          if (b.priority !== a.priority) return b.priority - a.priority;
+          if (b.requiredSessionCount !== a.requiredSessionCount)
+            return b.requiredSessionCount - a.requiredSessionCount;
+          return b.discountValue - a.discountValue;
+        });
+
+        if (matchingRules.length > 0) {
+          const best = matchingRules[0];
+          if (best.rule.discountType === "PERCENTAGE") {
+            const progTotal = progSelections.reduce((sum, sel) => {
+              const s = sessionMap.get(sel.sessionId);
+              return sum + (s?.specialPrice ?? s?.price ?? 0) * (sel.seatsRequested || 1);
+            }, 0);
+            discountAmount += (progTotal * best.rule.discountValue) / 100;
+          } else {
+            // Flat deduction per seat
+            discountAmount += best.rule.discountValue * progSeats;
+          }
+        }
+      }
+    }
+
+    // Apply discounts to the entire total (base + add-ons)
+    const finalTotalAmount = Math.max(0, totalAmountWithProgramPrice - discountAmount);
+
+    const isPartialOrInstallment = paymentType === "Partial" || paymentType === "Installment";
+    let paidAmount = finalTotalAmount;
+
+    if (explicitPaidAmount != null && !isNaN(Number(explicitPaidAmount))) {
+      paidAmount = Number(explicitPaidAmount);
+    } else if (typeof partialAmount === 'number' && isPartialOrInstallment) {
+      paidAmount = partialAmount;
+    }
+    
+    if (isPartialOrInstallment) {
+      if (paidAmount > finalTotalAmount) paidAmount = finalTotalAmount;
+      if (paidAmount < 0) paidAmount = 0;
+    }
+
+    if (paymentType === "Later") {
+      paidAmount = 0;
+    }
+
+    // Calculate balance: total price minus what's being paid now
+    const totalPrice = full_payment_price ?? finalTotalAmount;
+    const balance = Math.max(0, totalPrice - paidAmount);
+
+    const currency =
+      typeof paymentCurrency === "string" && paymentCurrency.trim().length > 0
+        ? paymentCurrency.trim().toUpperCase()
+        : DEFAULT_CURRENCY;
+
+    const resolvedOrderId = providedOrderId?.trim() || generatePayHereOrderId(leaderId);
 
     const paymentMethodName =
       paymentProvider === "PAYHERE"
@@ -247,51 +476,73 @@ export async function POST(request) {
 
     const customerDetails = buildCustomerDetails(customer, leader);
 
-    // Calculate total seats for commission
-    const totalSeats = selections.reduce((sum, sel) => sum + sel.seatsRequested, 0);
+    // Calculate total seats for commission (party size across sessions)
+    // When booking for multiple sessions (e.g. 2 seats morning + 2 seats afternoon),
+    // count as 2 seats rather than summing all sessions.
+    const sessionSeatsMap = new Map();
+    for (const sel of selections) {
+      const sId = sel.sessionId;
+      sessionSeatsMap.set(sId, (sessionSeatsMap.get(sId) || 0) + (sel.seatsRequested || 0));
+    }
+    const totalSeats = sessionSeatsMap.size > 0 ? Math.max(...sessionSeatsMap.values()) : 0;
 
     // Retry logic for handling concurrent booking conflicts
     let transactionResult;
     let lastError;
-
+    
     for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
       try {
         transactionResult = await prisma.$transaction(
           async (tx) => {
             await validateAvailability(tx, bookingRange, selections, sessionMap);
 
+            let finalTransactionId = null;
+            if (paymentProvider === "MANUAL") {
+              if (transactionId && !transactionId.startsWith("Auto-generated") && !transactionId.startsWith("TEST-")) {
+                finalTransactionId = transactionId.trim();
+              } else if (paymentType === "Later" && effectiveSource !== "ADMIN") {
+                // Online "Pay Later": no financial transaction has taken place yet.
+                // It is tracked by its reservation order reference (orderId).
+                // TXN reference is assigned when payment is actually collected/recorded.
+                finalTransactionId = null;
+              } else {
+                finalTransactionId = await generateNextTransactionId(tx);
+              }
+            }
+
             const paymentRecord = await tx.payment.create({
               data: {
                 provider: paymentProvider,
-                status: paymentStatus,
-                amount: amountDueNow,
+                status: (paymentProvider === "PAYHERE" || paymentType === "Later" || balance > 0) ? "PENDING" : "SUCCESS",
+                amount: paidAmount,
                 currency,
                 method: paymentMethodName,
                 orderId: resolvedOrderId,
-                transactionId:
-                  paymentProvider === "MANUAL" && transactionId
-                    ? transactionId
-                    : null,
+                transactionId: finalTransactionId,
               },
             });
 
+            const finalBookingStatus = isAuthorizedAdmin && requestedStatus
+              ? requestedStatus
+              : (balance === 0 && paymentType !== "Later" ? "CONFIRMED" : "PENDING");
+
             const bookingRecord = await tx.booking.create({
               data: {
-                leaderId,
+                leaderId: resolvedLeaderId,
                 bookedDate: bookingDate,
-                paymentType: pricing.paymentType,
-                amount: fullTotal,
-                balance,
+                source: effectiveSource,
+                paymentType: isPartialOrInstallment ? "Partial" : (paymentType === "Later" ? "Later" : "Full"),
+                amount: totalPrice,
+                balance: balance,
                 paymentId: paymentRecord.id,
-                status: bookingStatus,
-                additionalNotes: additionalNotes,
-                checkoutAttemptId,
+                status: finalBookingStatus,
+                additionalNotes: additionalNotes ?? null,
               },
             });
 
             const selectionCustomerIds = await createCustomerRecords(
               tx,
-              leaderId,
+              resolvedLeaderId,
               selections
             );
 
@@ -307,9 +558,9 @@ export async function POST(request) {
             const commissionRecord = await createCommissionRecord(
               tx,
               bookingRecord.id,
-              leaderId,
+              resolvedLeaderId,
               totalSeats,
-              fullTotal
+              finalTotalAmount
             );
 
             return { bookingRecord, paymentRecord, commissionRecord };
@@ -319,25 +570,26 @@ export async function POST(request) {
             timeout: 15000, // 15 second timeout
           }
         );
-
+        
         // Success - break out of retry loop
         break;
       } catch (error) {
         lastError = error;
-
+        
         if (isRetryableError(error) && attempt < MAX_RETRY_ATTEMPTS) {
-          // Exponential backoff: 100ms, 200ms, 400ms...
-          const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
-          console.error("Booking concurrency retry");
+          // Exponential backoff with jitter
+          const jitter = Math.floor(Math.random() * 50);
+          const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1) + jitter;
+          console.log(`Booking attempt ${attempt} failed due to concurrency (${error?.message || error?.code}), retrying in ${delayMs}ms...`);
           await sleep(delayMs);
           continue;
         }
-
+        
         // Non-retryable error or max attempts reached
         throw error;
       }
     }
-
+    
     if (!transactionResult) {
       throw lastError || new Error("Booking transaction failed after all retry attempts");
     }
@@ -358,14 +610,9 @@ export async function POST(request) {
 
       const itemsLabel = buildPayHereItems(selections, sessionMap);
 
-      const returnUrlWithOrder = appendOrderIdToUrl(
-        payHereConfig.returnUrl,
-        paymentRecord.orderId
-      );
-      const cancelUrlWithOrder = appendOrderIdToUrl(
-        payHereConfig.cancelUrl,
-        paymentRecord.orderId
-      );
+      // Append order_id to return and cancel URLs so the result page can update the DB
+      const returnUrlWithOrder = `${payHereConfig.returnUrl}&order_id=${paymentRecord.orderId}`;
+      const cancelUrlWithOrder = `${payHereConfig.cancelUrl}&order_id=${paymentRecord.orderId}`;
 
       paymentRedirect = {
         actionUrl: payHereConfig.actionUrl,
@@ -387,7 +634,7 @@ export async function POST(request) {
           country: customerDetails.country,
           hash,
           custom_1: String(booking.id),
-          custom_2: String(leaderId),
+          custom_2: String(resolvedLeaderId),
         },
       };
 
@@ -405,28 +652,57 @@ export async function POST(request) {
       });
     }
 
-    return NextResponse.json(
-      buildPublicBookingResponse({
-        bookingId: booking.id,
-        referenceCode: paymentRecord.orderId,
-        paymentProvider,
-        paymentRedirect,
-        duplicate: false,
-      })
-    );
+    // Format booked items with session name, time slots, and add-on options for email
+    const bookedItems = selections.map((sel) => {
+      const session = sessionMap.get(sel.sessionId);
+      const sessionType = sel.sessionTypeId
+        ? session?.sessionTypes?.find((st) => st.id === sel.sessionTypeId)
+        : null;
+
+      return {
+        sessionName: session?.name || `Activity #${sel.sessionId}`,
+        programTitle: session?.program?.title || programInfo?.title || "Tea Experience",
+        startTime: session?.startTime || null,
+        endTime: session?.endTime || null,
+        sessionTypeName: sessionType?.name || null,
+        seats: sel.seatsRequested || 1,
+      };
+    });
+
+    const programInfo = sessions[0]?.program;
+
+    // Trigger email notification asynchronously without blocking response
+    sendBookingConfirmation({
+      id: booking.id,
+      bookingNumber: paymentRecord.orderId,
+      date: bookingDate,
+      programTitle: programInfo?.title || null,
+      location: programInfo?.location?.name || null,
+      currency: currency || "USD",
+      totalPrice: totalPrice,
+      paidAmount: paidAmount,
+      balance: balance,
+      paymentType: paymentType,
+      paymentMethod: paymentMethodName || (paymentType === "Later" ? "Pay Later" : paymentType),
+      items: bookedItems,
+      email: customerDetails.email,
+      firstName: customerDetails.firstName,
+      lastName: customerDetails.lastName,
+    }).catch((err) => console.error("Error triggering booking email:", err));
+
+    return NextResponse.json({
+      success: true,
+      bookingId: booking.id,
+      referenceCode: paymentRecord.orderId,
+      message:
+        paymentProvider === "PAYHERE"
+          ? "Booking created. Redirecting to payment gateway."
+          : "Booking created successfully",
+      paymentRedirect,
+    });
   } catch (error) {
-    if (isCheckoutAttemptUniqueConflict(error)) {
-      const replay = await replayExistingCheckout(checkoutAttemptId, {
-        retries: 8,
-        delayMs: 25,
-      });
-      if (replay) {
-        return NextResponse.json(replay);
-      }
-    }
-
-    console.error("Booking creation failed");
-
+    console.error("Booking creation failed", error);
+    
     // Handle specific concurrency-related errors with user-friendly messages
     if (isRetryableError(error)) {
       return NextResponse.json(
@@ -439,6 +715,19 @@ export async function POST(request) {
       );
     }
 
+    if (error?.code === "P2002") {
+      const target = String(error?.meta?.target || "");
+      if (target.includes("transactionId")) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "This transaction reference has already been used. Please provide a unique transaction reference.",
+          },
+          { status: 409 }
+        );
+      }
+    }
+    
     const status = error instanceof HttpError ? error.status : 500;
     const message =
       error?.message || "An unexpected error occurred while creating the booking";
@@ -447,83 +736,12 @@ export async function POST(request) {
   }
 }
 
-async function replayExistingCheckout(attemptId, options = {}) {
-  if (!attemptId) {
-    return null;
-  }
-  const retries = Number.isInteger(options.retries) ? options.retries : 0;
-  const delayMs = Number.isInteger(options.delayMs) ? options.delayMs : 25;
-
-  for (let attempt = 0; attempt <= retries; attempt += 1) {
-    const existing = await prisma.booking.findUnique({
-      where: { checkoutAttemptId: attemptId },
-      include: { payment: true },
-    });
-    if (existing) {
-      return buildExistingCheckoutResponse(existing);
-    }
-    if (attempt < retries) {
-      await sleep(delayMs);
-    }
-  }
-  return null;
-}
-
-async function buildExistingCheckoutResponse(existingCheckout) {
-  const paymentRecord = existingCheckout.payment;
-  let paymentRedirect = null;
-
-  if (paymentRecord?.provider === "PAYHERE" && isPayHereEnabled()) {
-    const payHereConfig = getPayHereConfig();
-    const currency = paymentRecord.currency || "USD";
-    const amountFormatted = formatPayHereAmount(paymentRecord.amount);
-    const hashedSecret = md5Upper(payHereConfig.merchantSecret);
-    const hash = md5Upper(
-      `${payHereConfig.merchantId}${paymentRecord.orderId}${amountFormatted}${currency}${hashedSecret}`
-    );
-    paymentRedirect = {
-      actionUrl: payHereConfig.actionUrl,
-      params: {
-        merchant_id: payHereConfig.merchantId,
-        return_url: appendOrderIdToUrl(
-          payHereConfig.returnUrl,
-          paymentRecord.orderId
-        ),
-        cancel_url: appendOrderIdToUrl(
-          payHereConfig.cancelUrl,
-          paymentRecord.orderId
-        ),
-        notify_url: payHereConfig.notifyUrl,
-        order_id: paymentRecord.orderId,
-        items: "Tea Experience Booking",
-        currency,
-        amount: amountFormatted,
-        hash,
-        custom_1: String(existingCheckout.id),
-        custom_2: String(existingCheckout.leaderId),
-      },
-    };
-  }
-
-  return buildPublicBookingResponse({
-    bookingId: existingCheckout.id,
-    referenceCode: paymentRecord?.orderId,
-    paymentProvider: paymentRecord?.provider,
-    paymentRedirect,
-    duplicate: true,
-  });
-}
-
 function validatePayload(payload) {
   if (!payload || typeof payload !== "object") {
     return "Invalid request payload";
   }
 
   const { leaderId, bookedDate, selections, payment } = payload;
-
-  if (!leaderId) {
-    return "leaderId is required";
-  }
 
   if (!bookedDate) {
     return "bookedDate is required";
@@ -563,10 +781,6 @@ function validatePayload(payload) {
   if (provider === "MANUAL") {
     if (!payment.method) {
       return "Payment method is required";
-    }
-
-    if (payment.paymentType !== "Later" && !payment.transactionId) {
-      return "Payment transactionId is required";
     }
   }
 
@@ -669,6 +883,50 @@ async function validateAvailability(tx, bookingRange, selections, sessionMap) {
   }
 }
 
+function calculatePrice(selections, sessionMap) {
+  return selections.map((selection) => {
+    const session = sessionMap.get(selection.sessionId);
+
+    if (!session) {
+      throw new HttpError(`Session ${selection.sessionId} not found`);
+    }
+
+    const sessionBasePrice = session.specialPrice ?? session.price ?? 0;
+    let sessionTypePrice = 0;
+
+    if (selection.sessionTypeId) {
+      const sessionType = session.sessionTypes.find(
+        (type) => type.id === selection.sessionTypeId
+      );
+
+      if (!sessionType) {
+        throw new HttpError(
+          `Session type ${selection.sessionTypeId} does not belong to session ${selection.sessionId}`
+        );
+      }
+
+      sessionTypePrice = sessionType.specialPrice ?? sessionType.price ?? 0;
+    }
+
+    const unitPrice = sessionBasePrice + sessionTypePrice;
+
+    if (unitPrice === null || unitPrice === undefined) {
+      throw new HttpError(`Price not configured for session ${selection.sessionId}`);
+    }
+
+    const total = unitPrice * selection.seatsRequested;
+
+    return {
+      sessionId: selection.sessionId,
+      sessionTypeId: selection.sessionTypeId ?? null,
+      sessionBasePrice,
+      sessionTypePrice,
+      unitPrice,
+      seatsRequested: selection.seatsRequested,
+      total,
+    };
+  });
+}
 
 async function createCustomerRecords(tx, leaderId, selections) {
   const selectionCustomerIds = [];
@@ -737,12 +995,36 @@ async function createCustomerRecords(tx, leaderId, selections) {
   return selectionCustomerIds;
 }
 
+async function generateNextTransactionId(tx) {
+  // Query the highest TXN record ordered by transactionId desc
+  // Because 'TXN-000001' is zero-padded to 6 digits, lexicographical descending matches numeric order
+  const latestTxn = await tx.payment.findFirst({
+    where: {
+      transactionId: { startsWith: "TXN-" },
+    },
+    orderBy: { transactionId: "desc" },
+    select: { transactionId: true },
+  });
+
+  let maxNum = 0;
+  if (latestTxn?.transactionId) {
+    const match = latestTxn.transactionId.match(/^TXN-(\d+)$/i);
+    if (match) {
+      maxNum = parseInt(match[1], 10);
+    }
+  }
+
+  const nextNum = maxNum + 1;
+  return `TXN-${String(nextNum).padStart(6, "0")}`;
+}
+
 function generatePayHereOrderId(leaderId) {
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = Math.floor(Math.random() * 1_000_000)
     .toString(36)
     .toUpperCase();
-  return `RV-${leaderId}-${timestamp}-${random}`.slice(0, 40);
+  const prefix = leaderId ? `RV-${leaderId}` : "RV";
+  return `${prefix}-${timestamp}-${random}`.slice(0, 40);
 }
 
 function formatPayHereAmount(amount) {
@@ -931,3 +1213,4 @@ async function createCommissionRecord(tx, bookingId, leaderId, totalSeats, booki
 
   return commission;
 }
+

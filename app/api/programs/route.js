@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { jsonAuthError, requireAdmin } from "@/lib/security/auth";
+import { requirePermission } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 function parseTimeValue(value) {
   if (!value) return null;
@@ -36,10 +38,12 @@ function parseTimeValue(value) {
 
 // GET /api/programs - List all programs
 export async function GET(request) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "programs", "read");
+    if (!authCheck.authorized) {
+      return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+    }
+
     const { searchParams } = new URL(request.url);
     const includeLocation = searchParams.get("includeLocation") === "true";
     const isActiveParam = searchParams.get("isActive");
@@ -52,10 +56,27 @@ export async function GET(request) {
       where.isActive = isActiveParam === "true";
     }
 
-    const programs = await prisma.program.findMany({
+    const programsData = await prisma.program.findMany({
       where,
       include: {
         location: includeLocation,
+        discountRules: {
+          where: { isActive: true },
+        },
+        sessions: {
+          include: {
+            bookingItems: {
+              where: {
+                booking: {
+                  status: { in: ['PAID', 'CONFIRMED'] },
+                },
+              },
+              select: {
+                quantity: true,
+              },
+            },
+          },
+        },
         _count: {
           select: { sessions: true },
         },
@@ -63,6 +84,18 @@ export async function GET(request) {
       orderBy: {
         createdAt: "asc",
       },
+    });
+
+    const programs = programsData.map((program) => {
+      const totalBookedSeats = program.sessions.reduce((acc, session) => {
+        return acc + session.bookingItems.reduce((sum, item) => sum + item.quantity, 0);
+      }, 0);
+      
+      const { sessions, ...programWithoutSessions } = program;
+      return {
+        ...programWithoutSessions,
+        totalBookedSeats,
+      };
     });
 
     return NextResponse.json({ programs });
@@ -77,10 +110,15 @@ export async function GET(request) {
 
 // POST /api/programs - Create a new program
 export async function POST(request) {
-  const auth = requireAdmin(request);
-  if (!auth.ok) return jsonAuthError(auth);
-
   try {
+    const authCheck = await requirePermission(request, "programs", "write");
+    if (!authCheck.authorized) {
+      return NextResponse.json(
+        { error: authCheck.error },
+        { status: authCheck.status }
+      );
+    }
+
     const body = await request.json();
     const {
       title,
@@ -89,7 +127,9 @@ export async function POST(request) {
       endTime,
       locationId,
       seats,
+      price,
       isActive,
+      sessions,
     } = body;
 
     // Validation
@@ -112,6 +152,14 @@ export async function POST(request) {
     if (seats < 0) {
       return NextResponse.json(
         { error: "Seats must be a positive number" },
+        { status: 400 }
+      );
+    }
+
+    const parsedPrice = Number.parseFloat(price ?? "0");
+    if (Number.isNaN(parsedPrice) || parsedPrice < 0) {
+      return NextResponse.json(
+        { error: "Price must be a non-negative number" },
         { status: 400 }
       );
     }
@@ -141,6 +189,47 @@ export async function POST(request) {
       );
     }
 
+    // Prepare sessions if any
+    let sessionsToCreate = undefined;
+    if (Array.isArray(sessions) && sessions.length > 0) {
+      sessionsToCreate = [];
+      for (const s of sessions) {
+        if (!s.name || !s.startTime || !s.endTime) {
+          return NextResponse.json(
+            { error: "Each session must have a name, startTime, and endTime" },
+            { status: 400 }
+          );
+        }
+        const sStart = parseTimeValue(s.startTime);
+        const sEnd = parseTimeValue(s.endTime);
+        if (!sStart || !sEnd) {
+          return NextResponse.json(
+            { error: `Invalid time format for session: ${s.name}` },
+            { status: 400 }
+          );
+        }
+        const sessionPayload = {
+          name: s.name,
+          startTime: sStart,
+          endTime: sEnd,
+          price: s.price !== "" && s.price != null ? parseFloat(s.price) : null,
+          specialPrice: s.specialPrice !== "" && s.specialPrice != null ? parseFloat(s.specialPrice) : null,
+        };
+
+        if (Array.isArray(s.sessionTypes) && s.sessionTypes.length > 0) {
+          sessionPayload.sessionTypes = {
+            create: s.sessionTypes.map(st => ({
+              name: st.name,
+              price: st.price ? parseFloat(st.price) : 0,
+              specialPrice: st.specialPrice ? parseFloat(st.specialPrice) : null,
+            }))
+          };
+        }
+
+        sessionsToCreate.push(sessionPayload);
+      }
+    }
+
     // Create program
     const program = await prisma.program.create({
       data: {
@@ -150,10 +239,21 @@ export async function POST(request) {
         endTime: parsedEndTime,
         locationId: parseInt(locationId),
         seats: parseInt(seats),
+        price: parsedPrice,
         isActive: isActive !== undefined ? Boolean(isActive) : true,
+        ...(sessionsToCreate && {
+          sessions: {
+            create: sessionsToCreate
+          }
+        })
       },
       include: {
         location: true,
+        sessions: {
+          include: {
+            sessionTypes: true,
+          }
+        },
       },
     });
 
