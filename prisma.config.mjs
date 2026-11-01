@@ -4,6 +4,11 @@ import { defineConfig, env } from "prisma/config";
 config({ path: ".env" });
 config({ path: ".env.local" });
 
+// Migrations and seed use the direct connection. Runtime keeps DATABASE_URL.
+const datasourceUrl = process.env.DIRECT_URL
+  ? process.env.DIRECT_URL
+  : env("DATABASE_URL");
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
@@ -11,6 +16,6 @@ export default defineConfig({
     seed: "node prisma/seed.js",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: datasourceUrl,
   },
 });

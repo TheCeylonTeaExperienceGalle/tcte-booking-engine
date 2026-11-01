@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-    provider = "mysql"
+    provider = "postgresql"
 }
 
 model User {
@@ -115,8 +115,8 @@ model Program {
     id          Int       @id @default(autoincrement())
     title       String
     description String?
-    startTime   DateTime  @db.Time
-    endTime     DateTime  @db.Time
+    startTime   DateTime  @db.Time(6)
+    endTime     DateTime  @db.Time(6)
     locationId  Int
     location    Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
     seats       Int
@@ -138,8 +138,8 @@ model Session {
     program   Program @relation(fields: [programId], references: [id], onDelete: Cascade)
 
     name      String
-    startTime DateTime  @db.Time
-    endTime   DateTime  @db.Time
+    startTime DateTime  @db.Time(6)
+    endTime   DateTime  @db.Time(6)
     price     Float?
     specialPrice Float?
     createdAt DateTime  @default(now())

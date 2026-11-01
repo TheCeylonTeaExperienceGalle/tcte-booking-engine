@@ -14,7 +14,7 @@ jobs:
       JWT_REFRESH_SECRET: ci-refresh-secret-32-characters-minx
       JWT_ACCESS_EXPIRY: 15m
       JWT_REFRESH_EXPIRY: 7d
-      DATABASE_URL: mysql://placeholder:placeholder@127.0.0.1:3306/placeholder
+      DATABASE_URL: postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder
 
     steps:
       - name: Checkout repository

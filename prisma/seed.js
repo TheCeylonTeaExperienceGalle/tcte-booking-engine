@@ -4,9 +4,20 @@ const bcrypt = require("bcryptjs");
 
 let prisma;
 
+const SEEDED_ID_TABLES = ["locations", "programs", "sessions", "session_types"];
+
+async function syncIdentitySequences() {
+  for (const table of SEEDED_ID_TABLES) {
+    await prisma.$queryRawUnsafe(
+      `SELECT setval(pg_get_serial_sequence('public.${table}', 'id'), (SELECT MAX(id) FROM "${table}"))`
+    );
+  }
+}
+
 async function main() {
   const { createPrismaClient } = await import("../lib/create-client.mjs");
-  prisma = createPrismaClient();
+  // Migrations and seed use the direct connection when DIRECT_URL is set.
+  prisma = createPrismaClient(process.env.DIRECT_URL || process.env.DATABASE_URL);
 
   // Seed roles
   const adminRole = await prisma.role.upsert({
@@ -121,6 +132,8 @@ async function main() {
       create: st,
     });
   }
+
+  await syncIdentitySequences();
 
   console.log("Seeded all data successfully.");
 }
