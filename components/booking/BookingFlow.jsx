@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import BookingHeader from "@/components/booking/BookingHeader";
+import BookingFooter from "@/components/booking/BookingFooter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaCheck } from "react-icons/fa";
@@ -260,12 +260,12 @@ function BookingForm() {
     return (
       <div className="max-w-2xl mx-auto my-12 px-4 animate-in fade-in duration-500">
         <Card className="border-2 shadow-2xl bg-card overflow-hidden">
-          <div className="bg-emerald-700 text-white p-6 text-center">
+          <div className="bg-[#1A3D1A] text-white p-6 text-center">
             <div className="inline-flex p-3 bg-white/20 rounded-full mb-3">
               <FaCheck className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-2xl font-bold">Booking Confirmed!</h1>
-            <p className="text-emerald-100 text-sm mt-1">
+            <p className="text-[#F9F6F0] text-sm mt-1">
               Thank you! Your reservation has been successfully placed.
               {confirmedBooking?.guestEmail && (
                 <> A confirmation email was sent to <strong>{confirmedBooking.guestEmail}</strong>.</>
@@ -286,7 +286,7 @@ function BookingForm() {
               {confirmedBooking && (
                 <Button
                   size="lg"
-                  className="bg-emerald-800 hover:bg-emerald-900 text-white gap-2 h-11"
+                  className="bg-[#2D6A2D] hover:bg-[#1A3D1A] text-white gap-2 h-11"
                   onClick={() => downloadSingleBookingPDF(confirmedBooking)}
                 >
                   <Download className="h-4 w-4" />
@@ -342,7 +342,7 @@ function BookingForm() {
                   {confirmedBooking.items && confirmedBooking.items.length > 0 && (
                     <div className="pt-2 border-t space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-[#767014]">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-[#1A3D1A]">
                           Program, Session & Activities
                         </h4>
                         <span className="text-[11px] text-muted-foreground font-medium">
@@ -357,7 +357,7 @@ function BookingForm() {
                           >
                             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-2">
                               <span className="font-bold text-sm text-foreground flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-[#767014] inline-block" />
+                                <span className="w-2 h-2 rounded-full bg-[#1A3D1A] inline-block" />
                                 Program: {item.programTitle}
                               </span>
                               <span className="text-xs font-semibold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
@@ -453,7 +453,7 @@ function BookingForm() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
               {confirmedBooking && (
                 <Button
-                  className="w-full gap-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold h-12 text-sm shadow-md"
+                  className="w-full gap-2 bg-[#2D6A2D] hover:bg-[#1A3D1A] text-white font-bold h-12 text-sm shadow-md"
                   onClick={() => downloadSingleBookingPDF(confirmedBooking)}
                 >
                   <FileText className="h-4 w-4" />
@@ -557,15 +557,15 @@ function BookingForm() {
 export default function BookingFlow() {
   return (
     <>
-      <Header />
-      <main className="min-h-screen py-16 bg-gradient-to-b from-background to-secondary/10">
+      <BookingHeader />
+      <main id="main-content" className="min-h-screen py-16 bg-gradient-to-b from-background to-secondary/10">
         <div className="container mx-auto px-4">
           <BookingProvider>
             <BookingForm />
           </BookingProvider>
         </div>
       </main>
-      <Footer />
+      <BookingFooter />
     </>
   );
 }

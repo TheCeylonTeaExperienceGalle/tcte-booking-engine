@@ -1,9 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -17,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -62,39 +58,39 @@ export default function LoginPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fef9ef,_#f0f5f2)] dark:bg-[radial-gradient(circle_at_top,_#0f172a,_#020617)] px-4 py-8 sm:py-12">
+    <div className="min-h-screen bg-[#F9F6F0] px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-5xl">
-        <div className="grid overflow-hidden rounded-[32px] border border-white/60 bg-white/80 backdrop-blur-xl shadow-[0_25px_70px_rgba(15,23,42,0.18)] dark:bg-slate-900/70 dark:border-slate-800 lg:grid-cols-2">
+        <div className="grid overflow-hidden rounded-sm border border-[#DED7CA] bg-white shadow-[0_25px_70px_rgba(26,61,26,0.12)] lg:grid-cols-2">
           {/* Story panel */}
-          <div className="relative flex flex-col justify-between gap-8 bg-gradient-to-b from-amber-50 via-emerald-100/80 to-emerald-50/80 p-8 sm:p-10 text-slate-800 border-b border-white/40 dark:from-emerald-900/60 dark:via-slate-900/60 dark:to-slate-950 dark:border-white/10 lg:border-b-0 lg:border-r lg:border-white/20">
+          <div className="relative flex flex-col justify-between gap-8 bg-[#1A3D1A] p-8 sm:p-10 text-[#F9F6F0] lg:border-r lg:border-white/10">
             <div>
-              <span className="inline-flex items-center rounded-full bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+              <span className="inline-flex items-center rounded-full bg-[#D3AE24] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#1A3D1A]">
                 Since 1920
               </span>
-              <h2 className="mt-6 text-3xl font-serif font-semibold leading-tight text-slate-900">
+              <h2 className="mt-6 text-3xl font-serif font-semibold leading-tight text-[#D3AE24]">
                 The Ceylon Tea Experience
               </h2>
-              <p className="mt-4 text-base leading-relaxed text-slate-600">
+              <p className="mt-4 text-base leading-relaxed text-[#F9F6F0]/80">
                 We craft restorative tea journeys that invite you to pause, breathe deeply, and rediscover balance.
               </p>
             </div>
             <div className="space-y-4">
               {highlights.map((item) => (
                 <div key={item} className="flex items-start space-x-4">
-                  <span className="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80 text-sm font-semibold uppercase tracking-wide text-emerald-600 shadow-md">
+                  <span className="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-sm bg-[#2D6A2D] text-sm font-semibold uppercase tracking-wide text-[#D3AE24]">
                     CT
                   </span>
-                  <p className="text-sm font-medium text-slate-700">{item}</p>
+                  <p className="text-sm font-medium text-[#F9F6F0]">{item}</p>
                 </div>
               ))}
             </div>
-            <div className="text-sm text-slate-500">
+            <div className="text-sm text-[#F9F6F0]/70">
               Open year-round | Custom itineraries | Dedicated hospitality
             </div>
           </div>
 
           {/* Form panel */}
-          <div className="bg-white p-6 sm:p-10 dark:bg-slate-900/90">
+          <div className="bg-white p-6 sm:p-10">
             <Card className="border-0 bg-transparent shadow-none">
               <CardHeader className="space-y-4 text-center">
                 <div className="flex justify-center">
@@ -143,19 +139,22 @@ export default function LoginPage() {
                       <Checkbox id="remember" />
                       <span>Remember me</span>
                     </label>
-                    <Link href="/contact" className="font-medium text-primary hover:underline">
+                    <a
+                      href="mailto:reservations@theceylonteaexperience.com"
+                      className="font-medium text-primary hover:underline"
+                    >
                       Need help?
-                    </Link>
+                    </a>
                   </div>
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-amber-600 to-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:translate-y-0.5"
+                    className="w-full rounded-sm bg-[#2D6A2D] text-white shadow-md hover:bg-[#1A3D1A]"
                     disabled={isLoading}
                   >
                     {isLoading ? "Signing in..." : "Sign in"}
                   </Button>
                   <p className="text-center text-sm text-muted-foreground">
-                    New to Reviva? <Link href="/contact" className="font-medium text-primary hover:underline">Chat with our admin team</Link>
+                    New to The Ceylon Tea Experience? <a href="mailto:reservations@theceylonteaexperience.com" className="font-medium text-primary hover:underline">Chat with our admin team</a>
                   </p>
                 </form>
               </CardContent>

@@ -104,7 +104,7 @@ export default function Sidebar({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen bg-card border-r border-border transition-all duration-300 ease-in-out",
+          "fixed left-0 top-0 z-40 h-screen bg-[#1A3D1A] text-[#F9F6F0] border-r border-[#102C16] transition-all duration-300 ease-in-out",
           "md:translate-x-0",
           isMobileOpen ? "translate-x-0 w-64" : "-translate-x-full w-64",
           isCollapsed ? "md:w-16" : "md:w-64"
@@ -112,14 +112,14 @@ export default function Sidebar({
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-20 items-center border-b border-border px-4 justify-center md:justify-start">
+          <div className="flex h-20 items-center border-b border-white/10 px-4 justify-center md:justify-start">
             <Link href="/dashboard" className={cn("flex items-center", isCollapsed ? "justify-center" : "space-x-3")}>
               <Image
                 src="/image/logo/logo.png"
-                alt="Reviva logo"
+                alt="The Ceylon Tea Experience logo"
                 width={200}
                 height={200}
-                className=" object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110 filter brightness-0"
+                className="object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110 brightness-0 invert"
                 priority
                 quality={70}
               />
@@ -128,14 +128,14 @@ export default function Sidebar({
           </div>
 
           {/* User Info */}
-          <div className="border-b border-border px-4 py-4">
+          <div className="border-b border-white/10 px-4 py-4">
             <div
               className={cn(
                 "flex items-center transition-all duration-300",
                 isCollapsed ? "justify-center" : "space-x-3"
               )}
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold shrink-0">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#D3AE24] text-[#1A3D1A] font-semibold shrink-0">
                 {user?.name?.[0]?.toUpperCase() ||
                   user?.email?.[0]?.toUpperCase() ||
                   "U"}
@@ -145,7 +145,7 @@ export default function Sidebar({
                   <p className="text-sm font-medium truncate">
                     {user?.name || "User"}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="text-xs text-[#D3AE24] truncate">
                     {user?.email}
                   </p>
                 </div>
@@ -213,8 +213,8 @@ export default function Sidebar({
                           "flex w-full items-center rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
                           isCollapsed ? "justify-center" : "space-x-3",
                           isGroupActive
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                            ? "bg-[#D3AE24] text-[#1A3D1A]"
+                            : "text-[#F9F6F0]/75 hover:bg-white/10 hover:text-white"
                         )}
                         title={isCollapsed ? link.label : undefined}
                         aria-expanded={isExpanded}
@@ -257,8 +257,8 @@ export default function Sidebar({
                                   "flex items-center rounded-lg px-3 py-2 text-sm transition-colors",
                                   isCollapsed ? "justify-center" : "space-x-3",
                                   isActive
-                                    ? "bg-primary/10 text-primary"
-                                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                    ? "bg-[#2D6A2D] text-white"
+                                    : "text-[#F9F6F0]/75 hover:bg-white/10 hover:text-white"
                                 )}
                                 title={isCollapsed ? child.label : undefined}
                               >
@@ -286,8 +286,8 @@ export default function Sidebar({
                         "flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                         isCollapsed ? "justify-center" : "space-x-3",
                         isActive
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                          ? "bg-[#D3AE24] text-[#1A3D1A]"
+                          : "text-[#F9F6F0]/75 hover:bg-white/10 hover:text-white"
                       )}
                       title={isCollapsed ? link.label : undefined}
                     >
@@ -301,11 +301,11 @@ export default function Sidebar({
           </nav>
 
           {/* Logout Button */}
-          <div className="border-t border-border p-2">
+          <div className="border-t border-white/10 p-2">
             <Button
               variant="ghost"
               className={cn(
-                "w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+                "w-full text-[#F9F6F0]/75 hover:text-white hover:bg-white/10",
                 isCollapsed ? "justify-center px-2" : "justify-start"
               )}
               onClick={onLogout}

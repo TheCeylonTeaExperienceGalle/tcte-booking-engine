@@ -191,26 +191,26 @@ export default function CommissionRulesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight" style={{ color: '#767014' }}>Commission Rules</h2>
+          <h2 className="text-3xl font-bold tracking-tight" style={{ color: '#1A3D1A' }}>Commission Rules</h2>
           <p style={{ color: '#000000', opacity: 0.7 }}>
             Define commission percentages based on seat ranges for affiliate leaders.
           </p>
         </div>
         <Button 
           onClick={handleCreate}
-          style={{ background: 'linear-gradient(to right, #767014, #C5BF81)', color: '#ffffff' }}
+          style={{ background: 'linear-gradient(to right, #1A3D1A, #D3AE24)', color: '#ffffff' }}
         >
           <Plus className="mr-2 h-4 w-4" /> Add Rule
         </Button>
       </div>
 
       {/* Info Card */}
-      <Card className="border-2" style={{ borderColor: '#C5BF81', backgroundColor: 'rgba(197, 191, 129, 0.1)' }}>
+      <Card className="border-2" style={{ borderColor: '#D3AE24', backgroundColor: 'rgba(211, 174, 36, 0.1)' }}>
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <Percent className="h-5 w-5 mt-0.5" style={{ color: '#767014' }} />
+            <Percent className="h-5 w-5 mt-0.5" style={{ color: '#1A3D1A' }} />
             <div>
-              <p className="font-medium" style={{ color: '#767014' }}>How Commission Rules Work</p>
+              <p className="font-medium" style={{ color: '#1A3D1A' }}>How Commission Rules Work</p>
               <p className="text-sm" style={{ color: '#000000', opacity: 0.7 }}>
                 When a booking is made using a leader&apos;s affiliate code, the system automatically calculates 
                 commission based on the number of seats booked. Each rule defines a seat range and the 
@@ -221,9 +221,9 @@ export default function CommissionRulesPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-2" style={{ borderColor: '#C5BF81' }}>
+      <Card className="border-2" style={{ borderColor: '#D3AE24' }}>
         <CardHeader>
-          <CardTitle style={{ color: '#767014' }}>All Commission Rules</CardTitle>
+          <CardTitle style={{ color: '#1A3D1A' }}>All Commission Rules</CardTitle>
           <CardDescription style={{ color: '#000000', opacity: 0.7 }}>
             Manage commission rates for different seat ranges.
           </CardDescription>
@@ -231,18 +231,18 @@ export default function CommissionRulesPage() {
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center p-8">
-              <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#767014' }} />
+              <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#1A3D1A' }} />
             </div>
           ) : error ? (
-            <div className="p-4 rounded-md border" style={{ backgroundColor: '#C5BF81', borderColor: '#767014', color: '#000000' }}>{error}</div>
+            <div className="p-4 rounded-md border" style={{ backgroundColor: '#D3AE24', borderColor: '#1A3D1A', color: '#000000' }}>{error}</div>
           ) : rules.length === 0 ? (
             <div className="text-center py-8">
-              <Users className="h-12 w-12 mx-auto mb-4" style={{ color: '#C5BF81' }} />
+              <Users className="h-12 w-12 mx-auto mb-4" style={{ color: '#D3AE24' }} />
               <p style={{ color: '#000000', opacity: 0.7 }}>No commission rules defined yet.</p>
               <Button 
                 onClick={handleCreate}
                 className="mt-4"
-                style={{ backgroundColor: '#767014', color: '#ffffff' }}
+                style={{ backgroundColor: '#1A3D1A', color: '#ffffff' }}
               >
                 <Plus className="mr-2 h-4 w-4" /> Create First Rule
               </Button>
@@ -252,10 +252,10 @@ export default function CommissionRulesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead style={{ color: '#767014', fontWeight: 600 }}>Seat Range</TableHead>
-                    <TableHead style={{ color: '#767014', fontWeight: 600 }}>Commission Rate</TableHead>
-                    <TableHead style={{ color: '#767014', fontWeight: 600 }}>Status</TableHead>
-                    <TableHead className="text-right" style={{ color: '#767014', fontWeight: 600 }}>Actions</TableHead>
+                    <TableHead style={{ color: '#1A3D1A', fontWeight: 600 }}>Seat Range</TableHead>
+                    <TableHead style={{ color: '#1A3D1A', fontWeight: 600 }}>Commission Rate</TableHead>
+                    <TableHead style={{ color: '#1A3D1A', fontWeight: 600 }}>Status</TableHead>
+                    <TableHead className="text-right" style={{ color: '#1A3D1A', fontWeight: 600 }}>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -263,14 +263,14 @@ export default function CommissionRulesPage() {
                     <TableRow key={rule.id}>
                       <TableCell className="font-medium" style={{ color: '#000000' }}>
                         <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4" style={{ color: '#767014' }} />
+                          <Users className="h-4 w-4" style={{ color: '#1A3D1A' }} />
                           {formatSeatRange(rule)}
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge 
                           className="border-0 text-base"
-                          style={{ backgroundColor: '#767014', color: '#ffffff' }}
+                          style={{ backgroundColor: '#1A3D1A', color: '#ffffff' }}
                         >
                           {rule.commissionRate}%
                         </Badge>
@@ -292,7 +292,7 @@ export default function CommissionRulesPage() {
                             variant="ghost" 
                             size="icon" 
                             onClick={() => handleEdit(rule)}
-                            style={{ color: '#767014' }}
+                            style={{ color: '#1A3D1A' }}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -317,9 +317,9 @@ export default function CommissionRulesPage() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="border-2" style={{ borderColor: '#C5BF81' }}>
+        <DialogContent className="border-2" style={{ borderColor: '#D3AE24' }}>
           <DialogHeader>
-            <DialogTitle style={{ color: '#767014' }}>{editingRule ? "Edit Commission Rule" : "Add Commission Rule"}</DialogTitle>
+            <DialogTitle style={{ color: '#1A3D1A' }}>{editingRule ? "Edit Commission Rule" : "Add Commission Rule"}</DialogTitle>
             <DialogDescription style={{ color: '#000000', opacity: 0.7 }}>
               {editingRule
                 ? "Update the commission rule details."
@@ -329,7 +329,7 @@ export default function CommissionRulesPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="minSeats" style={{ color: '#767014' }}>Minimum Seats</Label>
+                <Label htmlFor="minSeats" style={{ color: '#1A3D1A' }}>Minimum Seats</Label>
                 <Input
                   id="minSeats"
                   type="number"
@@ -337,11 +337,11 @@ export default function CommissionRulesPage() {
                   value={formData.minSeats}
                   onChange={(e) => setFormData({ ...formData, minSeats: e.target.value })}
                   required
-                  className="focus-visible:ring-[#767014]"
+                  className="focus-visible:ring-[#1A3D1A]"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="maxSeats" style={{ color: '#767014' }}>Maximum Seats</Label>
+                <Label htmlFor="maxSeats" style={{ color: '#1A3D1A' }}>Maximum Seats</Label>
                 <Input
                   id="maxSeats"
                   type="number"
@@ -349,7 +349,7 @@ export default function CommissionRulesPage() {
                   placeholder="Leave empty for unlimited"
                   value={formData.maxSeats}
                   onChange={(e) => setFormData({ ...formData, maxSeats: e.target.value })}
-                  className="focus-visible:ring-[#767014]"
+                  className="focus-visible:ring-[#1A3D1A]"
                 />
                 <p className="text-xs" style={{ color: '#000000', opacity: 0.5 }}>
                   Leave empty for &quot;and above&quot; (e.g., 10+ seats)
@@ -357,7 +357,7 @@ export default function CommissionRulesPage() {
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="commissionRate" style={{ color: '#767014' }}>Commission Rate (%)</Label>
+              <Label htmlFor="commissionRate" style={{ color: '#1A3D1A' }}>Commission Rate (%)</Label>
               <div className="relative">
                 <Input
                   id="commissionRate"
@@ -369,9 +369,9 @@ export default function CommissionRulesPage() {
                   value={formData.commissionRate}
                   onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })}
                   required
-                  className="focus-visible:ring-[#767014] pr-8"
+                  className="focus-visible:ring-[#1A3D1A] pr-8"
                 />
-                <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: '#767014' }} />
+                <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: '#1A3D1A' }} />
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -379,16 +379,16 @@ export default function CommissionRulesPage() {
                 id="isActive"
                 checked={formData.isActive}
                 onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-                style={{ borderColor: '#767014' }}
+                style={{ borderColor: '#1A3D1A' }}
               />
-              <Label htmlFor="isActive" className="cursor-pointer" style={{ color: '#767014' }}>
+              <Label htmlFor="isActive" className="cursor-pointer" style={{ color: '#1A3D1A' }}>
                 Active (apply this rule to new bookings)
               </Label>
             </div>
             <DialogFooter>
               <Button 
                 type="submit"
-                style={{ backgroundColor: '#767014', color: '#ffffff' }}
+                style={{ backgroundColor: '#1A3D1A', color: '#ffffff' }}
               >
                 {editingRule ? "Save Changes" : "Create Rule"}
               </Button>
@@ -399,12 +399,12 @@ export default function CommissionRulesPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: '#C5BF81' }}>
+        <AlertDialogContent className="border-2" style={{ borderColor: '#D3AE24' }}>
           <AlertDialogHeader>
-            <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(197, 191, 129, 0.2)' }}>
-              <AlertTriangle className="h-8 w-8" style={{ color: '#767014' }} />
+            <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(211, 174, 36, 0.2)' }}>
+              <AlertTriangle className="h-8 w-8" style={{ color: '#1A3D1A' }} />
             </div>
-            <AlertDialogTitle className="text-center text-xl" style={{ color: '#767014' }}>
+            <AlertDialogTitle className="text-center text-xl" style={{ color: '#1A3D1A' }}>
               Delete Commission Rule?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center text-base" style={{ color: '#000000', opacity: 0.8 }}>
@@ -415,14 +415,14 @@ export default function CommissionRulesPage() {
           <AlertDialogFooter className="sm:justify-center gap-3">
             <AlertDialogCancel 
               className="border-2"
-              style={{ borderColor: '#C5BF81', color: '#767014' }}
+              style={{ borderColor: '#D3AE24', color: '#1A3D1A' }}
             >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="border-0"
-              style={{ backgroundColor: '#767014', color: '#ffffff' }}
+              style={{ backgroundColor: '#1A3D1A', color: '#ffffff' }}
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
@@ -433,12 +433,12 @@ export default function CommissionRulesPage() {
 
       {/* Success Dialog */}
       <AlertDialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: '#C5BF81' }}>
+        <AlertDialogContent className="border-2" style={{ borderColor: '#D3AE24' }}>
           <AlertDialogHeader>
-            <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: 'linear-gradient(135deg, #767014, #C5BF81)' }}>
+            <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: 'linear-gradient(135deg, #1A3D1A, #D3AE24)' }}>
               <CheckCircle className="h-8 w-8" style={{ color: '#ffffff' }} />
             </div>
-            <AlertDialogTitle className="text-center text-xl" style={{ color: '#767014' }}>
+            <AlertDialogTitle className="text-center text-xl" style={{ color: '#1A3D1A' }}>
               Success!
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center text-base" style={{ color: '#000000', opacity: 0.8 }}>
@@ -447,7 +447,7 @@ export default function CommissionRulesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
             <AlertDialogAction
-              style={{ background: 'linear-gradient(135deg, #767014, #C5BF81)', color: '#ffffff' }}
+              style={{ background: 'linear-gradient(135deg, #1A3D1A, #D3AE24)', color: '#ffffff' }}
             >
               <CheckCircle className="h-4 w-4 mr-2" />
               Ok
@@ -458,12 +458,12 @@ export default function CommissionRulesPage() {
 
       {/* Error Dialog */}
       <AlertDialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: '#C5BF81' }}>
+        <AlertDialogContent className="border-2" style={{ borderColor: '#D3AE24' }}>
           <AlertDialogHeader>
-            <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(197, 191, 129, 0.3)' }}>
-              <XCircle className="h-8 w-8" style={{ color: '#767014' }} />
+            <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: 'rgba(211, 174, 36, 0.3)' }}>
+              <XCircle className="h-8 w-8" style={{ color: '#1A3D1A' }} />
             </div>
-            <AlertDialogTitle className="text-center text-xl" style={{ color: '#767014' }}>
+            <AlertDialogTitle className="text-center text-xl" style={{ color: '#1A3D1A' }}>
               Oops! Something went wrong
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center text-base" style={{ color: '#000000', opacity: 0.8 }}>
@@ -472,7 +472,7 @@ export default function CommissionRulesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
             <AlertDialogAction
-              style={{ backgroundColor: '#767014', color: '#ffffff' }}
+              style={{ backgroundColor: '#1A3D1A', color: '#ffffff' }}
             >
               Try Again
             </AlertDialogAction>

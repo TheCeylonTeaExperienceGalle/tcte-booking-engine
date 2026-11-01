@@ -45,37 +45,37 @@
 
 :root {
   --radius: 0.625rem;
-  --background: #ffffff; /* Pure white background */
-  --foreground: #000000; /* Pure black text */
+  --background: #F9F6F0;
+  --foreground: #293129;
   --card: #ffffff;
-  --card-foreground: #000000;
+  --card-foreground: #293129;
   --popover: #ffffff;
-  --popover-foreground: #000000;
-  --primary: #767014; /* Ceylon Tea primary green */
+  --popover-foreground: #293129;
+  --primary: #2D6A2D;
   --primary-foreground: #ffffff;
-  --secondary: #C5BF81; /* Ceylon Tea secondary gold */
-  --secondary-foreground: #000000;
-  --muted: #f5f5f5;
-  --muted-foreground: #6b7280;
-  --accent: #C5BF81;
-  --accent-foreground: #000000;
+  --secondary: #D3AE24;
+  --secondary-foreground: #1A3D1A;
+  --muted: #F3EFE6;
+  --muted-foreground: #687067;
+  --accent: #E7F0E4;
+  --accent-foreground: #1A3D1A;
   --destructive: #dc2626;
-  --border: #e5e7eb;
-  --input: #f3f4f6;
-  --ring: #767014;
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --border: #DED7CA;
+  --input: #F7F2E9;
+  --ring: #2D6A2D;
+  --chart-1: #1A3D1A;
+  --chart-2: #2D6A2D;
+  --chart-3: #D3AE24;
+  --chart-4: #B8960C;
+  --chart-5: #687067;
+  --sidebar: #1A3D1A;
+  --sidebar-foreground: #F9F6F0;
+  --sidebar-primary: #D3AE24;
+  --sidebar-primary-foreground: #1A3D1A;
+  --sidebar-accent: #2D6A2D;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #102C16;
+  --sidebar-ring: #D3AE24;
 }
 
 .dark {
@@ -191,10 +191,10 @@
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(118, 112, 20, 0.3);
+    box-shadow: 0 0 20px rgba(26, 61, 26, 0.3);
   }
   50% {
-    box-shadow: 0 0 30px rgba(118, 112, 20, 0.6);
+    box-shadow: 0 0 30px rgba(26, 61, 26, 0.6);
   }
 }
 
@@ -316,11 +316,11 @@
 }
 
 .hover-glow:hover {
-  filter: drop-shadow(0 0 20px rgba(118, 112, 20, 0.4));
+  filter: drop-shadow(0 0 20px rgba(26, 61, 26, 0.4));
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #767014 0%, #C5BF81 100%);
+  background: linear-gradient(135deg, #1A3D1A 0%, #D3AE24 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -337,16 +337,16 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f5f5f5;
+  background: #F3EFE6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #767014;
+  background: #1A3D1A;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #5a560f;
+  background: #102C16;
 }
 
 /* Advanced Animations */
@@ -379,13 +379,13 @@ html {
 
 @keyframes blink-caret {
   0%, 50% { border-color: transparent; }
-  51%, 100% { border-color: #767014; }
+  51%, 100% { border-color: #1A3D1A; }
 }
 
 .typewriter {
   overflow: hidden;
   white-space: nowrap;
-  border-right: 2px solid #767014;
+  border-right: 2px solid #1A3D1A;
   animation: typewriter 4s steps(40) 1s forwards, blink-caret 1s step-end infinite;
 }
 
@@ -457,10 +457,10 @@ html {
 /* Neon glow effect */
 @keyframes neon-glow {
   0%, 100% {
-    text-shadow: 0 0 5px #767014, 0 0 10px #767014, 0 0 15px #767014;
+    text-shadow: 0 0 5px #1A3D1A, 0 0 10px #1A3D1A, 0 0 15px #1A3D1A;
   }
   50% {
-    text-shadow: 0 0 10px #767014, 0 0 20px #767014, 0 0 30px #767014;
+    text-shadow: 0 0 10px #1A3D1A, 0 0 20px #1A3D1A, 0 0 30px #1A3D1A;
   }
 }
 
@@ -484,7 +484,7 @@ html {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #767014;
+  background: #1A3D1A;
   animation: loading-dots 1.4s ease-in-out infinite;
 }
 
@@ -529,7 +529,7 @@ html {
 .liquid-btn {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(45deg, #767014, #C5BF81);
+  background: linear-gradient(45deg, #1A3D1A, #D3AE24);
   transition: all 0.3s ease;
 }
 
@@ -560,8 +560,8 @@ html {
 
 /* Glowing border */
 @keyframes glowing-border {
-  0%, 100% { box-shadow: 0 0 5px rgba(118, 112, 20, 0.5); }
-  50% { box-shadow: 0 0 20px rgba(118, 112, 20, 0.8); }
+  0%, 100% { box-shadow: 0 0 5px rgba(26, 61, 26, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(26, 61, 26, 0.8); }
 }
 
 .glowing-border {

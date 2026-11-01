@@ -243,7 +243,7 @@ export default function AffiliateEarningsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight" style={{ color: "#767014" }}>
+          <h2 className="text-3xl font-bold tracking-tight" style={{ color: "#1A3D1A" }}>
             Agent Earnings
           </h2>
           <p style={{ color: "#000000", opacity: 0.7 }}>
@@ -255,12 +255,12 @@ export default function AffiliateEarningsPage() {
       {/* Summary Cards */}
       {summary && (
         <div className="grid gap-4 md:grid-cols-4">
-          <Card className="border-2" style={{ borderColor: "#C5BF81" }}>
+          <Card className="border-2" style={{ borderColor: "#D3AE24" }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium" style={{ color: "#767014" }}>
+              <CardTitle className="text-sm font-medium" style={{ color: "#1A3D1A" }}>
                 Total Travel Agents
               </CardTitle>
-              <Users className="h-4 w-4" style={{ color: "#767014" }} />
+              <Users className="h-4 w-4" style={{ color: "#1A3D1A" }} />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" style={{ color: "#000000" }}>
@@ -272,12 +272,12 @@ export default function AffiliateEarningsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-2" style={{ borderColor: "#C5BF81" }}>
+          <Card className="border-2" style={{ borderColor: "#D3AE24" }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium" style={{ color: "#767014" }}>
+              <CardTitle className="text-sm font-medium" style={{ color: "#1A3D1A" }}>
                 Total Commission
               </CardTitle>
-              <TrendingUp className="h-4 w-4" style={{ color: "#767014" }} />
+              <TrendingUp className="h-4 w-4" style={{ color: "#1A3D1A" }} />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" style={{ color: "#000000" }}>
@@ -289,9 +289,9 @@ export default function AffiliateEarningsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-2" style={{ borderColor: "#C5BF81" }}>
+          <Card className="border-2" style={{ borderColor: "#D3AE24" }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium" style={{ color: "#767014" }}>
+              <CardTitle className="text-sm font-medium" style={{ color: "#1A3D1A" }}>
                 Paid Out
               </CardTitle>
               <Banknote className="h-4 w-4 text-green-600" />
@@ -306,9 +306,9 @@ export default function AffiliateEarningsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-2" style={{ borderColor: "#C5BF81" }}>
+          <Card className="border-2" style={{ borderColor: "#D3AE24" }}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium" style={{ color: "#767014" }}>
+              <CardTitle className="text-sm font-medium" style={{ color: "#1A3D1A" }}>
                 Pending Payment
               </CardTitle>
               <Clock className="h-4 w-4 text-orange-600" />
@@ -326,13 +326,13 @@ export default function AffiliateEarningsPage() {
       )}
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 border-b" style={{ borderColor: "#C5BF81" }}>
+      <div className="flex gap-2 border-b" style={{ borderColor: "#D3AE24" }}>
         <Button
           variant="ghost"
           className={`rounded-b-none ${activeTab === "overview" ? "border-b-2" : ""}`}
           style={{
-            borderColor: activeTab === "overview" ? "#767014" : "transparent",
-            color: activeTab === "overview" ? "#767014" : "#000000",
+            borderColor: activeTab === "overview" ? "#1A3D1A" : "transparent",
+            color: activeTab === "overview" ? "#1A3D1A" : "#000000",
           }}
           onClick={() => setActiveTab("overview")}
         >
@@ -343,8 +343,8 @@ export default function AffiliateEarningsPage() {
           variant="ghost"
           className={`rounded-b-none ${activeTab === "commissions" ? "border-b-2" : ""}`}
           style={{
-            borderColor: activeTab === "commissions" ? "#767014" : "transparent",
-            color: activeTab === "commissions" ? "#767014" : "#000000",
+            borderColor: activeTab === "commissions" ? "#1A3D1A" : "transparent",
+            color: activeTab === "commissions" ? "#1A3D1A" : "#000000",
           }}
           onClick={() => setActiveTab("commissions")}
         >
@@ -356,23 +356,23 @@ export default function AffiliateEarningsPage() {
       {/* Content */}
       {isLoading ? (
         <div className="flex justify-center p-8">
-          <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#767014" }} />
+          <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#1A3D1A" }} />
         </div>
       ) : error ? (
-        <Card className="border-2" style={{ borderColor: "#C5BF81" }}>
+        <Card className="border-2" style={{ borderColor: "#D3AE24" }}>
           <CardContent className="p-4">
             <div
               className="p-4 rounded-md border"
-              style={{ backgroundColor: "#C5BF81", borderColor: "#767014", color: "#000000" }}
+              style={{ backgroundColor: "#D3AE24", borderColor: "#1A3D1A", color: "#000000" }}
             >
               {error}
             </div>
           </CardContent>
         </Card>
       ) : activeTab === "overview" ? (
-        <Card className="border-2" style={{ borderColor: "#C5BF81" }}>
+        <Card className="border-2" style={{ borderColor: "#D3AE24" }}>
           <CardHeader>
-            <CardTitle style={{ color: "#767014" }}>Travel Agent Commission Summary</CardTitle>
+            <CardTitle style={{ color: "#1A3D1A" }}>Travel Agent Commission Summary</CardTitle>
             <CardDescription style={{ color: "#000000", opacity: 0.7 }}>
               Overview of commission earnings for each affiliate travel agent.
             </CardDescription>
@@ -380,7 +380,7 @@ export default function AffiliateEarningsPage() {
           <CardContent>
             {leaders.length === 0 ? (
               <div className="text-center py-8">
-                <Users className="h-12 w-12 mx-auto mb-4" style={{ color: "#C5BF81" }} />
+                <Users className="h-12 w-12 mx-auto mb-4" style={{ color: "#D3AE24" }} />
                 <p style={{ color: "#000000", opacity: 0.7 }}>
                   No affiliate travel agents with commissions yet.
                 </p>
@@ -390,14 +390,14 @@ export default function AffiliateEarningsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Travel Agent</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Promo Code</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Bookings</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Seats</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Total Earned</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Paid</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Pending</TableHead>
-                      <TableHead className="text-right" style={{ color: "#767014", fontWeight: 600 }}>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Travel Agent</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Promo Code</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Bookings</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Seats</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Total Earned</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Paid</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Pending</TableHead>
+                      <TableHead className="text-right" style={{ color: "#1A3D1A", fontWeight: 600 }}>
                         Actions
                       </TableHead>
                     </TableRow>
@@ -418,7 +418,7 @@ export default function AffiliateEarningsPage() {
                         <TableCell>
                           <Badge
                             className="border-0 font-mono"
-                            style={{ backgroundColor: "#767014", color: "#ffffff" }}
+                            style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}
                           >
                             {leader.promoteCode}
                           </Badge>
@@ -439,7 +439,7 @@ export default function AffiliateEarningsPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleViewLeaderDetails(leader)}
-                            style={{ color: "#767014" }}
+                            style={{ color: "#1A3D1A" }}
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             View
@@ -454,9 +454,9 @@ export default function AffiliateEarningsPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-2" style={{ borderColor: "#C5BF81" }}>
+        <Card className="border-2" style={{ borderColor: "#D3AE24" }}>
           <CardHeader>
-            <CardTitle style={{ color: "#767014" }}>All Commission Records</CardTitle>
+            <CardTitle style={{ color: "#1A3D1A" }}>All Commission Records</CardTitle>
             <CardDescription style={{ color: "#000000", opacity: 0.7 }}>
               Complete list of all commission records across all leaders.
             </CardDescription>
@@ -464,7 +464,7 @@ export default function AffiliateEarningsPage() {
           <CardContent>
             {commissions.length === 0 ? (
               <div className="text-center py-8">
-                <DollarSign className="h-12 w-12 mx-auto mb-4" style={{ color: "#C5BF81" }} />
+                <DollarSign className="h-12 w-12 mx-auto mb-4" style={{ color: "#D3AE24" }} />
                 <p style={{ color: "#000000", opacity: 0.7 }}>No commission records yet.</p>
               </div>
             ) : (
@@ -472,14 +472,14 @@ export default function AffiliateEarningsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Date</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Travel Agent</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Booking</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Seats</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Rate</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Commission</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Status</TableHead>
-                      <TableHead className="text-right" style={{ color: "#767014", fontWeight: 600 }}>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Date</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Travel Agent</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Booking</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Seats</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Rate</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Commission</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Status</TableHead>
+                      <TableHead className="text-right" style={{ color: "#1A3D1A", fontWeight: 600 }}>
                         Actions
                       </TableHead>
                     </TableRow>
@@ -509,7 +509,7 @@ export default function AffiliateEarningsPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleUpdatePayment(commission)}
-                            style={{ color: "#767014" }}
+                            style={{ color: "#1A3D1A" }}
                           >
                             <CreditCard className="h-4 w-4 mr-1" />
                             Update
@@ -529,7 +529,7 @@ export default function AffiliateEarningsPage() {
       <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
         <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] border-0 bg-white dark:bg-slate-900 shadow-2xl rounded-xl overflow-hidden p-0 flex flex-col" role="dialog" aria-modal="true">
           {/* Fixed Header */}
-          <div className="bg-[#767014] p-4 sm:p-6 text-white flex-shrink-0">
+          <div className="bg-[#1A3D1A] p-4 sm:p-6 text-white flex-shrink-0">
             <DialogHeader className="space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <DialogTitle className="text-xl sm:text-2xl font-serif font-bold text-white flex flex-wrap items-center gap-2">
@@ -561,7 +561,7 @@ export default function AffiliateEarningsPage() {
             {/* Commission List */}
             {isLoadingDetails ? (
               <div className="flex flex-col items-center justify-center py-16 space-y-3">
-                <Loader2 className="h-10 w-10 animate-spin text-[#767014]" />
+                <Loader2 className="h-10 w-10 animate-spin text-[#1A3D1A]" />
                 <p className="text-slate-500 text-sm">Loading commission data...</p>
               </div>
             ) : leaderCommissions.length === 0 ? (
@@ -632,7 +632,7 @@ export default function AffiliateEarningsPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleUpdatePayment(c)}
-                                className="h-8 w-8 p-0 rounded-full hover:bg-[#767014]/10 hover:text-[#767014] text-slate-500"
+                                className="h-8 w-8 p-0 rounded-full hover:bg-[#1A3D1A]/10 hover:text-[#1A3D1A] text-slate-500"
                                 title="Update payment status"
                               >
                                 <CreditCard className="h-4 w-4" />
@@ -686,7 +686,7 @@ export default function AffiliateEarningsPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleUpdatePayment(c)}
-                          className="h-8 text-xs hover:bg-[#767014]/10 hover:text-[#767014] hover:border-[#767014]/30"
+                          className="h-8 text-xs hover:bg-[#1A3D1A]/10 hover:text-[#1A3D1A] hover:border-[#1A3D1A]/30"
                         >
                           <CreditCard className="h-3.5 w-3.5 mr-1" />
                           Update
@@ -703,7 +703,7 @@ export default function AffiliateEarningsPage() {
           <div className="bg-slate-50 dark:bg-slate-800/80 px-4 sm:px-6 py-4 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-700 flex-shrink-0">
             <Button
               onClick={() => setDetailDialogOpen(false)}
-              className="bg-[#767014] hover:bg-[#5a5410] text-white px-6 py-2"
+              className="bg-[#1A3D1A] hover:bg-[#5a5410] text-white px-6 py-2"
             >
               Close Details
             </Button>
@@ -713,9 +713,9 @@ export default function AffiliateEarningsPage() {
 
       {/* Payment Update Dialog */}
       <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-        <DialogContent className="border-2" style={{ borderColor: "#C5BF81" }}>
+        <DialogContent className="border-2" style={{ borderColor: "#D3AE24" }}>
           <DialogHeader>
-            <DialogTitle style={{ color: "#767014" }}>Update Commission Payment</DialogTitle>
+            <DialogTitle style={{ color: "#1A3D1A" }}>Update Commission Payment</DialogTitle>
             <DialogDescription style={{ color: "#000000", opacity: 0.7 }}>
               Update payment status for this commission record.
             </DialogDescription>
@@ -724,39 +724,39 @@ export default function AffiliateEarningsPage() {
           {selectedCommission && (
             <form onSubmit={handleSubmitPayment} className="space-y-4">
               {/* Commission Details */}
-              <div className="p-3 rounded-lg" style={{ backgroundColor: "rgba(197, 191, 129, 0.2)" }}>
+              <div className="p-3 rounded-lg" style={{ backgroundColor: "rgba(211, 174, 36, 0.2)" }}>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span style={{ color: "#767014" }}>Travel Agent:</span>{" "}
+                    <span style={{ color: "#1A3D1A" }}>Travel Agent:</span>{" "}
                     <span style={{ color: "#000000" }}>{selectedCommission.leader?.name}</span>
                   </div>
                   <div>
-                    <span style={{ color: "#767014" }}>Booking:</span>{" "}
+                    <span style={{ color: "#1A3D1A" }}>Booking:</span>{" "}
                     <span style={{ color: "#000000" }}>#{selectedCommission.booking?.id}</span>
                   </div>
                   <div>
-                    <span style={{ color: "#767014" }}>Seats:</span>{" "}
+                    <span style={{ color: "#1A3D1A" }}>Seats:</span>{" "}
                     <span style={{ color: "#000000" }}>{selectedCommission.totalSeats}</span>
                   </div>
                   <div>
-                    <span style={{ color: "#767014" }}>Rate:</span>{" "}
+                    <span style={{ color: "#1A3D1A" }}>Rate:</span>{" "}
                     <span style={{ color: "#000000" }}>{selectedCommission.commissionRate}%</span>
                   </div>
                 </div>
-                <div className="mt-2 text-lg font-bold" style={{ color: "#767014" }}>
+                <div className="mt-2 text-lg font-bold" style={{ color: "#1A3D1A" }}>
                   Commission Amount: {formatCurrency(selectedCommission.commissionAmount)}
                 </div>
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="paymentStatus" style={{ color: "#767014" }}>
+                <Label htmlFor="paymentStatus" style={{ color: "#1A3D1A" }}>
                   Payment Status
                 </Label>
                 <Select
                   value={paymentForm.paymentStatus}
                   onValueChange={(value) => setPaymentForm({ ...paymentForm, paymentStatus: value })}
                 >
-                  <SelectTrigger className="focus:ring-[#767014]">
+                  <SelectTrigger className="focus:ring-[#1A3D1A]">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -770,7 +770,7 @@ export default function AffiliateEarningsPage() {
               {(paymentForm.paymentStatus === "PARTIALLY_PAID" ||
                 paymentForm.paymentStatus === "PAID") && (
                 <div className="grid gap-2">
-                  <Label htmlFor="paidAmount" style={{ color: "#767014" }}>
+                  <Label htmlFor="paidAmount" style={{ color: "#1A3D1A" }}>
                     Amount Paid (LKR)
                   </Label>
                   <Input
@@ -786,13 +786,13 @@ export default function AffiliateEarningsPage() {
                         ? selectedCommission.commissionAmount.toString()
                         : "Enter paid amount"
                     }
-                    className="focus-visible:ring-[#767014]"
+                    className="focus-visible:ring-[#1A3D1A]"
                   />
                 </div>
               )}
 
               <div className="grid gap-2">
-                <Label htmlFor="notes" style={{ color: "#767014" }}>
+                <Label htmlFor="notes" style={{ color: "#1A3D1A" }}>
                   Notes (Optional)
                 </Label>
                 <Textarea
@@ -800,7 +800,7 @@ export default function AffiliateEarningsPage() {
                   value={paymentForm.notes}
                   onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
                   placeholder="Add any notes about this payment..."
-                  className="focus-visible:ring-[#767014]"
+                  className="focus-visible:ring-[#1A3D1A]"
                 />
               </div>
 
@@ -809,11 +809,11 @@ export default function AffiliateEarningsPage() {
                   type="button"
                   variant="outline"
                   onClick={() => setPaymentDialogOpen(false)}
-                  style={{ borderColor: "#C5BF81", color: "#767014" }}
+                  style={{ borderColor: "#D3AE24", color: "#1A3D1A" }}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" style={{ backgroundColor: "#767014", color: "#ffffff" }}>
+                <Button type="submit" style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}>
                   Update Payment
                 </Button>
               </DialogFooter>
@@ -824,15 +824,15 @@ export default function AffiliateEarningsPage() {
 
       {/* Success Dialog */}
       <AlertDialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: "#C5BF81" }}>
+        <AlertDialogContent className="border-2" style={{ borderColor: "#D3AE24" }}>
           <AlertDialogHeader>
             <div
               className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-              style={{ background: "linear-gradient(135deg, #767014, #C5BF81)" }}
+              style={{ background: "linear-gradient(135deg, #1A3D1A, #D3AE24)" }}
             >
               <CheckCircle className="h-8 w-8" style={{ color: "#ffffff" }} />
             </div>
-            <AlertDialogTitle className="text-center text-xl" style={{ color: "#767014" }}>
+            <AlertDialogTitle className="text-center text-xl" style={{ color: "#1A3D1A" }}>
               Success!
             </AlertDialogTitle>
             <AlertDialogDescription
@@ -844,7 +844,7 @@ export default function AffiliateEarningsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
             <AlertDialogAction
-              style={{ background: "linear-gradient(135deg, #767014, #C5BF81)", color: "#ffffff" }}
+              style={{ background: "linear-gradient(135deg, #1A3D1A, #D3AE24)", color: "#ffffff" }}
             >
               <CheckCircle className="h-4 w-4 mr-2" />
               Ok
@@ -855,15 +855,15 @@ export default function AffiliateEarningsPage() {
 
       {/* Error Dialog */}
       <AlertDialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: "#C5BF81" }}>
+        <AlertDialogContent className="border-2" style={{ borderColor: "#D3AE24" }}>
           <AlertDialogHeader>
             <div
               className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-              style={{ backgroundColor: "rgba(197, 191, 129, 0.3)" }}
+              style={{ backgroundColor: "rgba(211, 174, 36, 0.3)" }}
             >
-              <XCircle className="h-8 w-8" style={{ color: "#767014" }} />
+              <XCircle className="h-8 w-8" style={{ color: "#1A3D1A" }} />
             </div>
-            <AlertDialogTitle className="text-center text-xl" style={{ color: "#767014" }}>
+            <AlertDialogTitle className="text-center text-xl" style={{ color: "#1A3D1A" }}>
               Oops! Something went wrong
             </AlertDialogTitle>
             <AlertDialogDescription
@@ -874,7 +874,7 @@ export default function AffiliateEarningsPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
-            <AlertDialogAction style={{ backgroundColor: "#767014", color: "#ffffff" }}>
+            <AlertDialogAction style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}>
               Try Again
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -299,7 +299,7 @@ export default function DiscountRulesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight" style={{ color: "#767014" }}>
+          <h2 className="text-3xl font-bold tracking-tight" style={{ color: "#1A3D1A" }}>
             Discount Rules
           </h2>
           <p style={{ color: "#000000", opacity: 0.7 }}>
@@ -309,7 +309,7 @@ export default function DiscountRulesPage() {
         {canWrite && (
           <Button
             onClick={handleCreate}
-            style={{ background: "linear-gradient(to right, #767014, #C5BF81)", color: "#ffffff" }}
+            style={{ background: "linear-gradient(to right, #1A3D1A, #D3AE24)", color: "#ffffff" }}
           >
             <Plus className="mr-2 h-4 w-4" /> Add Rule
           </Button>
@@ -317,12 +317,12 @@ export default function DiscountRulesPage() {
       </div>
 
       {/* Info Card */}
-      <Card className="border-2" style={{ borderColor: "#C5BF81", backgroundColor: "rgba(197, 191, 129, 0.1)" }}>
+      <Card className="border-2" style={{ borderColor: "#D3AE24", backgroundColor: "rgba(211, 174, 36, 0.1)" }}>
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <Tag className="h-5 w-5 mt-0.5" style={{ color: "#767014" }} />
+            <Tag className="h-5 w-5 mt-0.5" style={{ color: "#1A3D1A" }} />
             <div>
-              <p className="font-medium" style={{ color: "#767014" }}>How Discount Rules Work</p>
+              <p className="font-medium" style={{ color: "#1A3D1A" }}>How Discount Rules Work</p>
               <p className="text-sm" style={{ color: "#000000", opacity: 0.7 }}>
                 Create discount rules for specific session combinations within a program. When a customer
                 selects the exact sessions defined in a rule, the discount is automatically applied.
@@ -334,9 +334,9 @@ export default function DiscountRulesPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-2" style={{ borderColor: "#C5BF81" }}>
+      <Card className="border-2" style={{ borderColor: "#D3AE24" }}>
         <CardHeader>
-          <CardTitle style={{ color: "#767014" }}>All Discount Rules</CardTitle>
+          <CardTitle style={{ color: "#1A3D1A" }}>All Discount Rules</CardTitle>
           <CardDescription style={{ color: "#000000", opacity: 0.7 }}>
             Manage discount rules for session combinations.
           </CardDescription>
@@ -344,24 +344,24 @@ export default function DiscountRulesPage() {
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center p-8">
-              <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#767014" }} />
+              <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#1A3D1A" }} />
             </div>
           ) : error ? (
             <div
               className="p-4 rounded-md border"
-              style={{ backgroundColor: "#C5BF81", borderColor: "#767014", color: "#000000" }}
+              style={{ backgroundColor: "#D3AE24", borderColor: "#1A3D1A", color: "#000000" }}
             >
               {error}
             </div>
           ) : rules.length === 0 ? (
             <div className="text-center py-8">
-              <Tag className="h-12 w-12 mx-auto mb-4" style={{ color: "#C5BF81" }} />
+              <Tag className="h-12 w-12 mx-auto mb-4" style={{ color: "#D3AE24" }} />
               <p style={{ color: "#000000", opacity: 0.7 }}>No discount rules defined yet.</p>
               {canWrite && (
                 <Button
                   onClick={handleCreate}
                   className="mt-4"
-                  style={{ backgroundColor: "#767014", color: "#ffffff" }}
+                  style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}
                 >
                   <Plus className="mr-2 h-4 w-4" /> Create First Rule
                 </Button>
@@ -372,15 +372,15 @@ export default function DiscountRulesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead style={{ color: "#767014", fontWeight: 600 }}>Session</TableHead>
-                    <TableHead style={{ color: "#767014", fontWeight: 600 }}>Location</TableHead>
-                    <TableHead style={{ color: "#767014", fontWeight: 600 }}>Rule Name</TableHead>
-                    <TableHead style={{ color: "#767014", fontWeight: 600 }}>Sessions</TableHead>
-                    <TableHead style={{ color: "#767014", fontWeight: 600 }}>Discount</TableHead>
-                    <TableHead style={{ color: "#767014", fontWeight: 600 }}>Priority</TableHead>
-                    <TableHead style={{ color: "#767014", fontWeight: 600 }}>Status</TableHead>
+                    <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Session</TableHead>
+                    <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Location</TableHead>
+                    <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Rule Name</TableHead>
+                    <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Sessions</TableHead>
+                    <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Discount</TableHead>
+                    <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Priority</TableHead>
+                    <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Status</TableHead>
                     {canWrite && (
-                      <TableHead className="text-right" style={{ color: "#767014", fontWeight: 600 }}>
+                      <TableHead className="text-right" style={{ color: "#1A3D1A", fontWeight: 600 }}>
                         Actions
                       </TableHead>
                     )}
@@ -393,7 +393,7 @@ export default function DiscountRulesPage() {
                         {rule.program?.title || "N/A"}
                       </TableCell>
                       <TableCell style={{ color: "#000000" }}>
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-[#767014]/10 text-[#767014] border border-[#C5BF81]/40">
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-[#1A3D1A]/10 text-[#1A3D1A] border border-[#D3AE24]/40">
                           {rule.program?.location?.name || "N/A"}
                         </span>
                       </TableCell>
@@ -409,7 +409,7 @@ export default function DiscountRulesPage() {
                         <Badge
                           variant="outline"
                           className="max-w-[200px] truncate"
-                          style={{ borderColor: "#C5BF81", color: "#767014" }}
+                          style={{ borderColor: "#D3AE24", color: "#1A3D1A" }}
                         >
                           {getSessionNames(rule)}
                         </Badge>
@@ -417,7 +417,7 @@ export default function DiscountRulesPage() {
                       <TableCell>
                         <Badge
                           className="border-0 text-base"
-                          style={{ backgroundColor: "#767014", color: "#ffffff" }}
+                          style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}
                         >
                           {rule.discountType === "PERCENTAGE" ? (
                             <Percent className="h-3 w-3 mr-1" />
@@ -446,7 +446,7 @@ export default function DiscountRulesPage() {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEdit(rule)}
-                              style={{ color: "#767014" }}
+                              style={{ color: "#1A3D1A" }}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -472,9 +472,9 @@ export default function DiscountRulesPage() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="border-2 max-w-4xl max-h-[90vh] overflow-y-auto" style={{ borderColor: "#C5BF81" }}>
+        <DialogContent className="border-2 max-w-4xl max-h-[90vh] overflow-y-auto" style={{ borderColor: "#D3AE24" }}>
           <DialogHeader>
-            <DialogTitle style={{ color: "#767014" }}>
+            <DialogTitle style={{ color: "#1A3D1A" }}>
               {editingRule ? "Edit Discount Rule" : "Add Discount Rule"}
             </DialogTitle>
             <DialogDescription style={{ color: "#000000", opacity: 0.7 }}>
@@ -485,11 +485,11 @@ export default function DiscountRulesPage() {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="programId" style={{ color: "#767014" }}>
+              <Label htmlFor="programId" style={{ color: "#1A3D1A" }}>
                 Program *
               </Label>
               <Select value={formData.programId} onValueChange={handleProgramChange}>
-                <SelectTrigger className="focus:ring-[#767014]">
+                <SelectTrigger className="focus:ring-[#1A3D1A]">
                   <SelectValue placeholder="Select a program" />
                 </SelectTrigger>
                 <SelectContent>
@@ -503,7 +503,7 @@ export default function DiscountRulesPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="name" style={{ color: "#767014" }}>
+              <Label htmlFor="name" style={{ color: "#1A3D1A" }}>
                 Rule Name *
               </Label>
               <Input
@@ -512,12 +512,12 @@ export default function DiscountRulesPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
-                className="focus-visible:ring-[#767014]"
+                className="focus-visible:ring-[#1A3D1A]"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="description" style={{ color: "#767014" }}>
+              <Label htmlFor="description" style={{ color: "#1A3D1A" }}>
                 Description
               </Label>
               <Textarea
@@ -525,7 +525,7 @@ export default function DiscountRulesPage() {
                 placeholder="Optional description for this rule"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="focus-visible:ring-[#767014]"
+                className="focus-visible:ring-[#1A3D1A]"
                 rows={2}
               />
             </div>
@@ -533,7 +533,7 @@ export default function DiscountRulesPage() {
             {formData.programId && (
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
-                  <Label style={{ color: "#767014" }}>
+                  <Label style={{ color: "#1A3D1A" }}>
                     <ListChecks className="inline h-4 w-4 mr-1" />
                     Select Sessions *
                   </Label>
@@ -543,7 +543,7 @@ export default function DiscountRulesPage() {
                       variant="outline"
                       size="sm"
                       onClick={selectAllSessions}
-                      style={{ borderColor: "#C5BF81", color: "#767014" }}
+                      style={{ borderColor: "#D3AE24", color: "#1A3D1A" }}
                     >
                       Select All
                     </Button>
@@ -552,13 +552,13 @@ export default function DiscountRulesPage() {
                       variant="outline"
                       size="sm"
                       onClick={clearAllSessions}
-                      style={{ borderColor: "#C5BF81", color: "#767014" }}
+                      style={{ borderColor: "#D3AE24", color: "#1A3D1A" }}
                     >
                       Clear All
                     </Button>
                   </div>
                 </div>
-                <Card className="border" style={{ borderColor: "#C5BF81" }}>
+                <Card className="border" style={{ borderColor: "#D3AE24" }}>
                   <CardContent className="p-3">
                     {programSessions.length === 0 ? (
                       <p className="text-sm text-muted-foreground">
@@ -577,7 +577,7 @@ export default function DiscountRulesPage() {
                               onCheckedChange={(checked) =>
                                 handleSessionToggle(String(session.id), checked)
                               }
-                              style={{ borderColor: "#767014" }}
+                              style={{ borderColor: "#1A3D1A" }}
                             />
                             <Label
                               htmlFor={`session-${session.id}`}
@@ -605,14 +605,14 @@ export default function DiscountRulesPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="discountType" style={{ color: "#767014" }}>
+                <Label htmlFor="discountType" style={{ color: "#1A3D1A" }}>
                   Discount Type
                 </Label>
                 <Select
                   value={formData.discountType}
                   onValueChange={(value) => setFormData({ ...formData, discountType: value })}
                 >
-                  <SelectTrigger className="focus:ring-[#767014]">
+                  <SelectTrigger className="focus:ring-[#1A3D1A]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -622,7 +622,7 @@ export default function DiscountRulesPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="discountValue" style={{ color: "#767014" }}>
+                <Label htmlFor="discountValue" style={{ color: "#1A3D1A" }}>
                   Discount Value *
                 </Label>
                 <div className="relative">
@@ -636,17 +636,17 @@ export default function DiscountRulesPage() {
                     value={formData.discountValue}
                     onChange={(e) => setFormData({ ...formData, discountValue: e.target.value })}
                     required
-                    className="focus-visible:ring-[#767014] pr-8"
+                    className="focus-visible:ring-[#1A3D1A] pr-8"
                   />
                   {formData.discountType === "PERCENTAGE" ? (
                     <Percent
                       className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4"
-                      style={{ color: "#767014" }}
+                      style={{ color: "#1A3D1A" }}
                     />
                   ) : (
                     <span
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-sm"
-                      style={{ color: "#767014" }}
+                      style={{ color: "#1A3D1A" }}
                     >
                       USD.
                     </span>
@@ -656,7 +656,7 @@ export default function DiscountRulesPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="priority" style={{ color: "#767014" }}>
+              <Label htmlFor="priority" style={{ color: "#1A3D1A" }}>
                 Priority
               </Label>
               <Input
@@ -666,7 +666,7 @@ export default function DiscountRulesPage() {
                 placeholder="Higher priority rules are checked first"
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                className="focus-visible:ring-[#767014]"
+                className="focus-visible:ring-[#1A3D1A]"
               />
               <p className="text-xs" style={{ color: "#000000", opacity: 0.5 }}>
                 If multiple rules match, the one with higher priority is applied.
@@ -678,15 +678,15 @@ export default function DiscountRulesPage() {
                 id="isActive"
                 checked={formData.isActive}
                 onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-                style={{ borderColor: "#767014" }}
+                style={{ borderColor: "#1A3D1A" }}
               />
-              <Label htmlFor="isActive" className="cursor-pointer" style={{ color: "#767014" }}>
+              <Label htmlFor="isActive" className="cursor-pointer" style={{ color: "#1A3D1A" }}>
                 Active (apply this rule to bookings)
               </Label>
             </div>
 
             <DialogFooter>
-              <Button type="submit" style={{ backgroundColor: "#767014", color: "#ffffff" }}>
+              <Button type="submit" style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}>
                 {editingRule ? "Save Changes" : "Create Rule"}
               </Button>
             </DialogFooter>
@@ -696,15 +696,15 @@ export default function DiscountRulesPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: "#C5BF81" }}>
+        <AlertDialogContent className="border-2" style={{ borderColor: "#D3AE24" }}>
           <AlertDialogHeader>
             <div
               className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-              style={{ backgroundColor: "rgba(197, 191, 129, 0.2)" }}
+              style={{ backgroundColor: "rgba(211, 174, 36, 0.2)" }}
             >
-              <AlertTriangle className="h-8 w-8" style={{ color: "#767014" }} />
+              <AlertTriangle className="h-8 w-8" style={{ color: "#1A3D1A" }} />
             </div>
-            <AlertDialogTitle className="text-center text-xl" style={{ color: "#767014" }}>
+            <AlertDialogTitle className="text-center text-xl" style={{ color: "#1A3D1A" }}>
               Delete Discount Rule?
             </AlertDialogTitle>
             <AlertDialogDescription
@@ -716,13 +716,13 @@ export default function DiscountRulesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center gap-3">
-            <AlertDialogCancel className="border-2" style={{ borderColor: "#C5BF81", color: "#767014" }}>
+            <AlertDialogCancel className="border-2" style={{ borderColor: "#D3AE24", color: "#1A3D1A" }}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="border-0"
-              style={{ backgroundColor: "#767014", color: "#ffffff" }}
+              style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
@@ -733,15 +733,15 @@ export default function DiscountRulesPage() {
 
       {/* Success Dialog */}
       <AlertDialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: "#C5BF81" }}>
+        <AlertDialogContent className="border-2" style={{ borderColor: "#D3AE24" }}>
           <AlertDialogHeader>
             <div
               className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-              style={{ background: "linear-gradient(135deg, #767014, #C5BF81)" }}
+              style={{ background: "linear-gradient(135deg, #1A3D1A, #D3AE24)" }}
             >
               <CheckCircle className="h-8 w-8" style={{ color: "#ffffff" }} />
             </div>
-            <AlertDialogTitle className="text-center text-xl" style={{ color: "#767014" }}>
+            <AlertDialogTitle className="text-center text-xl" style={{ color: "#1A3D1A" }}>
               Success!
             </AlertDialogTitle>
             <AlertDialogDescription
@@ -753,7 +753,7 @@ export default function DiscountRulesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
             <AlertDialogAction
-              style={{ background: "linear-gradient(135deg, #767014, #C5BF81)", color: "#ffffff" }}
+              style={{ background: "linear-gradient(135deg, #1A3D1A, #D3AE24)", color: "#ffffff" }}
             >
               <CheckCircle className="h-4 w-4 mr-2" />
               Ok
@@ -764,15 +764,15 @@ export default function DiscountRulesPage() {
 
       {/* Error Dialog */}
       <AlertDialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: "#C5BF81" }}>
+        <AlertDialogContent className="border-2" style={{ borderColor: "#D3AE24" }}>
           <AlertDialogHeader>
             <div
               className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
-              style={{ backgroundColor: "rgba(197, 191, 129, 0.3)" }}
+              style={{ backgroundColor: "rgba(211, 174, 36, 0.3)" }}
             >
-              <XCircle className="h-8 w-8" style={{ color: "#767014" }} />
+              <XCircle className="h-8 w-8" style={{ color: "#1A3D1A" }} />
             </div>
-            <AlertDialogTitle className="text-center text-xl" style={{ color: "#767014" }}>
+            <AlertDialogTitle className="text-center text-xl" style={{ color: "#1A3D1A" }}>
               Oops! Something went wrong
             </AlertDialogTitle>
             <AlertDialogDescription
@@ -783,7 +783,7 @@ export default function DiscountRulesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
-            <AlertDialogAction style={{ backgroundColor: "#767014", color: "#ffffff" }}>
+            <AlertDialogAction style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}>
               Try Again
             </AlertDialogAction>
           </AlertDialogFooter>

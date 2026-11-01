@@ -1,5 +1,5 @@
 /**
- * Comprehensive Endpoint and Business Rule Test Suite for Reviva API
+ * Comprehensive Endpoint and Business Rule Test Suite for TCTE API
  * Run with: node scripts/test-endpoints.js
  */
 
@@ -126,7 +126,7 @@ async function cleanupTestData() {
 
 async function runAllTests() {
   console.log("================================================================================");
-  console.log("REVIVA FULL ENDPOINT & QUALITY TEST SUITE");
+  console.log("TCTE FULL ENDPOINT & QUALITY TEST SUITE");
   console.log("================================================================================");
 
   // 1. Safety Check: Verify Database Connection is Local/Dev
@@ -216,7 +216,7 @@ async function runAllTests() {
     await prisma.user.create({
       data: {
         name: "ZZ_TEST Admin",
-        email: "zz_test_admin@reviva.test",
+        email: "zz_test_admin@tcte.test",
         password: hashedPassword,
         roleId: adminRole.id,
         isActive: true,
@@ -227,7 +227,7 @@ async function runAllTests() {
     await prisma.user.create({
       data: {
         name: "ZZ_TEST Readonly",
-        email: "zz_test_readonly@reviva.test",
+        email: "zz_test_readonly@tcte.test",
         password: hashedPassword,
         roleId: readonlyRole.id,
         isActive: true,
@@ -238,7 +238,7 @@ async function runAllTests() {
     await prisma.user.create({
       data: {
         name: "ZZ_TEST Noaccess",
-        email: "zz_test_noaccess@reviva.test",
+        email: "zz_test_noaccess@tcte.test",
         password: hashedPassword,
         roleId: noaccessRole.id,
         isActive: true,
@@ -306,7 +306,7 @@ async function runAllTests() {
 
     // POST /api/auth/login (Admin)
     const loginAdmin = await apiRequest("POST", "/api/auth/login", {
-      body: { email: "zz_test_admin@reviva.test", password: "Password123!" },
+      body: { email: "zz_test_admin@tcte.test", password: "Password123!" },
     });
     adminToken = loginAdmin.data?.accessToken;
     const adminCookie = loginAdmin.headers.get("set-cookie") || "";
@@ -314,27 +314,27 @@ async function runAllTests() {
 
     // POST /api/auth/login (Invalid password -> 401)
     const loginBad = await apiRequest("POST", "/api/auth/login", {
-      body: { email: "zz_test_admin@reviva.test", password: "WrongPassword" },
+      body: { email: "zz_test_admin@tcte.test", password: "WrongPassword" },
     });
     recordResult("POST", "/api/auth/login", "Invalid credentials returns 401", loginBad.status === 401);
 
     // POST /api/auth/login (Readonly user)
     const loginRO = await apiRequest("POST", "/api/auth/login", {
-      body: { email: "zz_test_readonly@reviva.test", password: "Password123!" },
+      body: { email: "zz_test_readonly@tcte.test", password: "Password123!" },
     });
     readonlyToken = loginRO.data?.accessToken;
     recordResult("POST", "/api/auth/login", "Read-only user login", loginRO.status === 200 && Boolean(readonlyToken));
 
     // POST /api/auth/login (No-access user)
     const loginNA = await apiRequest("POST", "/api/auth/login", {
-      body: { email: "zz_test_noaccess@reviva.test", password: "Password123!" },
+      body: { email: "zz_test_noaccess@tcte.test", password: "Password123!" },
     });
     noaccessToken = loginNA.data?.accessToken;
     recordResult("POST", "/api/auth/login", "No-access user login", loginNA.status === 200 && Boolean(noaccessToken));
 
     // GET /api/auth/profile
     const profileOk = await apiRequest("GET", "/api/auth/profile", { token: adminToken });
-    recordResult("GET", "/api/auth/profile", "Happy path returns profile with permissions", profileOk.status === 200 && profileOk.data?.user?.email === "zz_test_admin@reviva.test");
+    recordResult("GET", "/api/auth/profile", "Happy path returns profile with permissions", profileOk.status === 200 && profileOk.data?.user?.email === "zz_test_admin@tcte.test");
 
     const profileNoToken = await apiRequest("GET", "/api/auth/profile");
     recordResult("GET", "/api/auth/profile", "Missing token returns 401", profileNoToken.status === 401);
@@ -356,7 +356,7 @@ async function runAllTests() {
 
     // Re-authenticate admin for subsequent protected tests
     const relogin = await apiRequest("POST", "/api/auth/login", {
-      body: { email: "zz_test_admin@reviva.test", password: "Password123!" },
+      body: { email: "zz_test_admin@tcte.test", password: "Password123!" },
     });
     adminToken = relogin.data?.accessToken;
 
@@ -614,7 +614,7 @@ async function runAllTests() {
       token: adminToken,
       body: {
         name: "ZZ_TEST Invalid Role User",
-        username: "zz_test_invalid_role@reviva.test",
+        username: "zz_test_invalid_role@tcte.test",
         password: "Password123!",
         roleId: testRoleId, // currently inactive
       },
@@ -632,7 +632,7 @@ async function runAllTests() {
       token: adminToken,
       body: {
         name: "ZZ_TEST Valid User",
-        username: "zz_test_valid_user@reviva.test",
+        username: "zz_test_valid_user@tcte.test",
         password: "Password123!",
         roleId: readonlyRole.id,
       },

@@ -160,7 +160,7 @@ export default function CustomersPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight" style={{ color: "#767014" }}>
+          <h2 className="text-3xl font-bold tracking-tight" style={{ color: "#1A3D1A" }}>
             Customers
           </h2>
           <p style={{ color: "#000000", opacity: 0.7 }}>
@@ -169,11 +169,11 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      <Card className="border-2" style={{ borderColor: "#C5BF81" }}>
+      <Card className="border-2" style={{ borderColor: "#D3AE24" }}>
         <CardHeader className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <CardTitle style={{ color: "#767014" }}>Customer Directory</CardTitle>
+              <CardTitle style={{ color: "#1A3D1A" }}>Customer Directory</CardTitle>
               <CardDescription style={{ color: "#000000", opacity: 0.7 }}>
                 De-duplicated guest profiles, WhatsApp contacts, ID/Passport numbers, and booking history.
               </CardDescription>
@@ -195,12 +195,12 @@ export default function CustomersPage() {
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#767014" }} />
+              <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#1A3D1A" }} />
             </div>
           ) : error ? (
             <div
               className="p-4 rounded-md border"
-              style={{ backgroundColor: "#C5BF81", borderColor: "#767014", color: "#000000" }}
+              style={{ backgroundColor: "#D3AE24", borderColor: "#1A3D1A", color: "#000000" }}
             >
               {error}
             </div>
@@ -220,14 +220,14 @@ export default function CustomersPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Name</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>WhatsApp No</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Email</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>ID / Passport</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Bookings</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Last Booking Date</TableHead>
-                      <TableHead style={{ color: "#767014", fontWeight: 600 }}>Travel Agent</TableHead>
-                      <TableHead className="text-right" style={{ color: "#767014", fontWeight: 600 }}>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Name</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>WhatsApp No</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Email</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>ID / Passport</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Bookings</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Last Booking Date</TableHead>
+                      <TableHead style={{ color: "#1A3D1A", fontWeight: 600 }}>Travel Agent</TableHead>
+                      <TableHead className="text-right" style={{ color: "#1A3D1A", fontWeight: 600 }}>
                         Actions
                       </TableHead>
                     </TableRow>
@@ -274,7 +274,7 @@ export default function CustomersPage() {
                           <Badge
                             className="text-xs font-semibold"
                             style={{
-                              backgroundColor: cust.bookingsCount > 1 ? "#767014" : "#C5BF81",
+                              backgroundColor: cust.bookingsCount > 1 ? "#1A3D1A" : "#D3AE24",
                               color: cust.bookingsCount > 1 ? "#ffffff" : "#000000",
                             }}
                           >
@@ -292,7 +292,7 @@ export default function CustomersPage() {
                         </TableCell>
                         <TableCell>
                           {cust.affiliatedAgent ? (
-                            <span className="text-xs font-medium text-[#767014]">
+                            <span className="text-xs font-medium text-[#1A3D1A]">
                               {cust.affiliatedAgent}
                             </span>
                           ) : (
@@ -305,7 +305,7 @@ export default function CustomersPage() {
                             size="sm"
                             onClick={() => handleViewCustomer(cust)}
                             className="h-8 gap-1 text-xs"
-                            style={{ color: "#767014" }}
+                            style={{ color: "#1A3D1A" }}
                           >
                             <Eye className="h-3.5 w-3.5" />
                             History
@@ -357,9 +357,9 @@ export default function CustomersPage() {
 
       {/* Customer Booking History Modal */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="border-2 max-w-2xl" style={{ borderColor: "#C5BF81" }}>
+        <DialogContent className="border-2 max-w-2xl" style={{ borderColor: "#D3AE24" }}>
           <DialogHeader>
-            <DialogTitle style={{ color: "#767014" }} className="flex items-center gap-2">
+            <DialogTitle style={{ color: "#1A3D1A" }} className="flex items-center gap-2">
               <Users className="h-5 w-5" />
               <span>Customer Booking History</span>
             </DialogTitle>
@@ -373,7 +373,7 @@ export default function CustomersPage() {
               {/* Customer Profile Summary */}
               <div
                 className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-lg border text-xs bg-muted/20"
-                style={{ borderColor: "#C5BF81" }}
+                style={{ borderColor: "#D3AE24" }}
               >
                 <div>
                   <span className="text-muted-foreground block">Customer Name</span>
@@ -401,7 +401,7 @@ export default function CustomersPage() {
 
               {/* Bookings List */}
               <div className="space-y-2">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#767014]">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#1A3D1A]">
                   Associated Bookings ({selectedCustomer.bookingHistory?.length || 0})
                 </h4>
 
@@ -419,7 +419,7 @@ export default function CustomersPage() {
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-[#767014] font-mono">
+                              <span className="font-bold text-[#1A3D1A] font-mono">
                                 {bh.orderId}
                               </span>
                               <Badge
@@ -469,7 +469,7 @@ export default function CustomersPage() {
           <DialogFooter>
             <Button
               onClick={() => setIsDialogOpen(false)}
-              style={{ backgroundColor: "#767014", color: "#ffffff" }}
+              style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}
             >
               Close
             </Button>

@@ -12,7 +12,7 @@ import { useEffect } from "react";
 export default function ChunkErrorHandler() {
   useEffect(() => {
     function triggerReload() {
-      const lastReloadKey = "reviva_chunk_error_reload";
+      const lastReloadKey = "tcte_chunk_error_reload";
       const lastReload = parseInt(
         sessionStorage.getItem(lastReloadKey) || "0",
         10

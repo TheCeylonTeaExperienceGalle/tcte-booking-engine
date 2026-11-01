@@ -946,9 +946,9 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
 
   if (initialLoading) {
     return (
-      <Card className="border-2 shadow-sm" style={{ borderColor: "#C5BF81" }}>
+      <Card className="border-2 shadow-sm" style={{ borderColor: "#D3AE24" }}>
         <CardContent className="flex flex-col items-center justify-center p-12 space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#767014" }} />
+          <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#1A3D1A" }} />
           <p className="text-muted-foreground">Loading booking options...</p>
         </CardContent>
       </Card>
@@ -957,11 +957,11 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
 
   if (initialError) {
     return (
-      <Card className="border-2 shadow-sm" style={{ borderColor: "#C5BF81" }}>
+      <Card className="border-2 shadow-sm" style={{ borderColor: "#D3AE24" }}>
         <CardContent className="space-y-4 p-6">
           <p className="font-semibold text-red-600">Failed to load booking resources</p>
           <p className="text-sm text-muted-foreground">{initialError}</p>
-          <Button onClick={loadInitialData} style={{ backgroundColor: "#767014", color: "#ffffff" }}>
+          <Button onClick={loadInitialData} style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}>
             Retry
           </Button>
         </CardContent>
@@ -989,9 +989,9 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
         </div>
       )}
 
-      <Card className="border-2 shadow-sm" style={{ borderColor: "#C5BF81" }}>
+      <Card className="border-2 shadow-sm" style={{ borderColor: "#D3AE24" }}>
         <CardHeader className="space-y-1">
-          <CardTitle style={{ color: "#767014" }}>
+          <CardTitle style={{ color: "#1A3D1A" }}>
             {isEditing ? "Edit Booking Details" : "Create New Booking"}
           </CardTitle>
           <CardDescription>
@@ -1006,7 +1006,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {/* Travel Agent Selector (Item 4: Optional) */}
             <div className="space-y-1.5">
-              <Label htmlFor="leaderId" style={{ color: "#767014", fontWeight: 600 }}>
+              <Label htmlFor="leaderId" style={{ color: "#1A3D1A", fontWeight: 600 }}>
                 Travel Agent <span className="text-xs font-normal text-muted-foreground">(Optional)</span>
               </Label>
               <Select 
@@ -1044,7 +1044,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
 
             {/* Booking Date */}
             <div className="space-y-1.5">
-              <Label htmlFor="bookedDate" style={{ color: "#767014", fontWeight: 600 }}>
+              <Label htmlFor="bookedDate" style={{ color: "#1A3D1A", fontWeight: 600 }}>
                 Booking Date *
               </Label>
               <Input
@@ -1067,7 +1067,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
 
             {/* Payment Type (Item 5) */}
             <div className="space-y-1.5">
-              <Label htmlFor="paymentType" style={{ color: "#767014", fontWeight: 600 }}>
+              <Label htmlFor="paymentType" style={{ color: "#1A3D1A", fontWeight: 600 }}>
                 Payment Type *
               </Label>
               <Select value={formState.paymentType} onValueChange={handlePaymentTypeChange}>
@@ -1084,7 +1084,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
 
             {/* Payment Method */}
             <div className="space-y-1.5">
-              <Label htmlFor="paymentMethod" style={{ color: "#767014", fontWeight: 600 }}>
+              <Label htmlFor="paymentMethod" style={{ color: "#1A3D1A", fontWeight: 600 }}>
                 Payment Method *
               </Label>
               <Select
@@ -1128,7 +1128,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
             {/* Transaction Reference (Item 9: Read-only auto-generated) */}
             <div className="space-y-1.5 md:col-span-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="transactionId" style={{ color: "#767014", fontWeight: 600 }}>
+                <Label htmlFor="transactionId" style={{ color: "#1A3D1A", fontWeight: 600 }}>
                   Transaction Reference (Auto-generated)
                 </Label>
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -1154,9 +1154,9 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
 
             {/* Advance Amount (Item 5: when Partial Payment is selected) */}
             {formState.paymentType === "Partial" && (
-              <div className="space-y-1.5 md:col-span-2 bg-[#767014]/5 p-3 rounded-lg border" style={{ borderColor: "#C5BF81" }}>
+              <div className="space-y-1.5 md:col-span-2 bg-[#1A3D1A]/5 p-3 rounded-lg border" style={{ borderColor: "#D3AE24" }}>
                 <div className="flex justify-between items-center">
-                  <Label htmlFor="paidAmount" style={{ color: "#767014", fontWeight: 600 }}>
+                  <Label htmlFor="paidAmount" style={{ color: "#1A3D1A", fontWeight: 600 }}>
                     Advance Amount to Pay Now (USD) *
                   </Label>
                   <span className="text-xs text-muted-foreground">
@@ -1191,7 +1191,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
             {/* Editing Status Selector */}
             {isEditing && (
               <div className="space-y-1.5">
-                <Label htmlFor="bookingStatus" style={{ color: "#767014", fontWeight: 600 }}>
+                <Label htmlFor="bookingStatus" style={{ color: "#1A3D1A", fontWeight: 600 }}>
                   Booking Status
                 </Label>
                 <Select
@@ -1218,7 +1218,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold" style={{ color: "#767014" }}>
+                <h3 className="text-lg font-semibold" style={{ color: "#1A3D1A" }}>
                   Programs & Session Selections
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -1230,7 +1230,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                 onClick={handleAddSelection}
                 variant="outline"
                 size="sm"
-                style={{ borderColor: "#767014", color: "#767014", backgroundColor: "#ffffff" }}
+                style={{ borderColor: "#1A3D1A", color: "#1A3D1A", backgroundColor: "#ffffff" }}
               >
                 <Plus className="mr-2 h-4 w-4" /> Add Program Selection
               </Button>
@@ -1264,12 +1264,12 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                   <Card
                     key={selection.id}
                     className="border-2 shadow-sm"
-                    style={{ borderColor: "#C5BF81" }}
+                    style={{ borderColor: "#D3AE24" }}
                   >
                     <CardHeader className="space-y-1 bg-muted/20 pb-3">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <CardTitle className="text-base" style={{ color: "#767014" }}>
+                          <CardTitle className="text-base" style={{ color: "#1A3D1A" }}>
                             Selection Group #{index + 1}
                           </CardTitle>
                           <CardDescription>
@@ -1296,7 +1296,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {/* Location Dropdown (Item 6: Lists all active DB locations) */}
                         <div className="space-y-1.5">
-                          <Label style={{ color: "#767014", fontWeight: 600 }}>Location *</Label>
+                          <Label style={{ color: "#1A3D1A", fontWeight: 600 }}>Location *</Label>
                           <Select
                             value={selection.locationId}
                             onValueChange={(val) => handleLocationChange(index, val)}
@@ -1338,7 +1338,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
 
                         {/* Program Dropdown (Filtered by location) */}
                         <div className="space-y-1.5">
-                          <Label style={{ color: "#767014", fontWeight: 600 }}>Program *</Label>
+                          <Label style={{ color: "#1A3D1A", fontWeight: 600 }}>Program *</Label>
                           <Select
                             value={selection.programId}
                             onValueChange={(val) => handleProgramChange(index, val)}
@@ -1380,7 +1380,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                         <div className="space-y-1.5">
                           <Label
                             htmlFor={`seats-${selection.id}`}
-                            style={{ color: "#767014", fontWeight: 600 }}
+                            style={{ color: "#1A3D1A", fontWeight: 600 }}
                           >
                             Seats Requested *
                           </Label>
@@ -1406,7 +1406,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
 
                       {/* Sessions List (Item 8: Past sessions blocking) */}
                       <div className="space-y-2">
-                        <Label style={{ color: "#767014", fontWeight: 600 }}>
+                        <Label style={{ color: "#1A3D1A", fontWeight: 600 }}>
                           Select Sessions *
                         </Label>
                         {fieldErrors[`selection-${index}-sessions`] && (
@@ -1416,7 +1416,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                         )}
                         <div
                           className="space-y-3 rounded-md border p-3"
-                          style={{ borderColor: "#C5BF81" }}
+                          style={{ borderColor: "#D3AE24" }}
                         >
                           {availableSessions.length === 0 ? (
                             <p className="text-sm text-muted-foreground">
@@ -1448,7 +1448,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                                     isPast
                                       ? "bg-muted/40 opacity-60 cursor-not-allowed"
                                       : isSelected
-                                      ? "bg-[#767014]/5 border-[#767014]"
+                                      ? "bg-[#1A3D1A]/5 border-[#1A3D1A]"
                                       : "bg-muted/15 border-border"
                                   }`}
                                 >
@@ -1546,8 +1546,8 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                       {/* Travel Agent is attending checkbox (Visible only when Travel Agent is selected) */}
                       {sessionIds.length > 0 && selectedLeader && (
                         <div
-                          className="flex items-center gap-2 rounded-md border px-3.5 py-2.5 text-sm bg-[#767014]/5"
-                          style={{ borderColor: "#C5BF81" }}
+                          className="flex items-center gap-2 rounded-md border px-3.5 py-2.5 text-sm bg-[#1A3D1A]/5"
+                          style={{ borderColor: "#D3AE24" }}
                         >
                           <Checkbox
                             id={`leader-attending-${selection.id}`}
@@ -1570,7 +1570,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                         <div className="space-y-3 pt-2">
                           <h4
                             className="font-semibold text-sm flex items-center gap-2"
-                            style={{ color: "#767014" }}
+                            style={{ color: "#1A3D1A" }}
                           >
                             <Users className="h-4 w-4" /> Guest Details ({seatsRequested} Attendee{seatsRequested !== 1 ? "s" : ""})
                           </h4>
@@ -1590,10 +1590,10 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                                     }`}
                                   >
                                     <div className="flex items-center justify-between text-xs font-semibold">
-                                      <span style={{ color: "#767014" }}>
+                                      <span style={{ color: "#1A3D1A" }}>
                                         Guest {cIdx + 1}
                                         {isAgentGuest && (
-                                          <Badge className="ml-2 bg-[#767014] text-white text-[10px]">
+                                          <Badge className="ml-2 bg-[#1A3D1A] text-white text-[10px]">
                                             Travel Agent
                                           </Badge>
                                         )}
@@ -1726,7 +1726,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                       {/* Group Summary & Discount Box */}
                       <div
                         className="rounded-md px-4 py-3 text-sm"
-                        style={{ backgroundColor: "rgba(197, 191, 129, 0.25)" }}
+                        style={{ backgroundColor: "rgba(211, 174, 36, 0.25)" }}
                       >
                         <div className="flex flex-col gap-2">
                           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1751,15 +1751,15 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                           )}
 
                           {!selection.discountLoading && selection.discountInfo && (
-                            <div className="flex flex-col gap-1 pt-1 border-t text-xs border-[#767014]/20">
+                            <div className="flex flex-col gap-1 pt-1 border-t text-xs border-[#1A3D1A]/20">
                               {selection.discountInfo.appliedRule && (
                                 <div className="flex items-center gap-2">
-                                  <Badge className="bg-[#767014] text-white text-[10px]">
+                                  <Badge className="bg-[#1A3D1A] text-white text-[10px]">
                                     {selection.discountInfo.appliedRule.discountType === "PERCENTAGE"
                                       ? `${selection.discountInfo.appliedRule.discountValue}% OFF`
                                       : `USD ${(Number(selection.discountInfo.appliedRule.discountValue) || 0).toFixed(2)} OFF`}
                                   </Badge>
-                                  <span className="text-[#767014] font-medium">
+                                  <span className="text-[#1A3D1A] font-medium">
                                     {selection.discountInfo.appliedRule.name} (Multi-session rule)
                                   </span>
                                 </div>
@@ -1776,7 +1776,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                                   </span>
                                 </div>
                               )}
-                              <div className="flex items-center justify-between font-bold text-sm text-[#767014] pt-0.5">
+                              <div className="flex items-center justify-between font-bold text-sm text-[#1A3D1A] pt-0.5">
                                 <span>Group Subtotal ({seatsRequested} guest{seatsRequested !== 1 ? "s" : ""}):</span>
                                 <span>
                                   USD{" "}
@@ -1806,7 +1806,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                   Total Multi-Session Savings: -USD {(Number(totalDiscount) || 0).toFixed(2)}
                 </div>
               )}
-              <div className="text-xl font-bold" style={{ color: "#767014" }}>
+              <div className="text-xl font-bold" style={{ color: "#1A3D1A" }}>
                 Estimated Total: {estimatedTotal > 0 ? `USD ${estimatedTotal.toFixed(2)}` : "—"}
               </div>
             </div>
@@ -1821,7 +1821,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                 type="submit"
                 disabled={submissionStatus === "submitting"}
                 className="text-white font-semibold shadow-md hover:shadow-lg min-w-[140px]"
-                style={{ background: "linear-gradient(to right, #767014, #C5BF81)" }}
+                style={{ background: "linear-gradient(to right, #1A3D1A, #D3AE24)" }}
               >
                 {submissionStatus === "submitting" ? (
                   <>
@@ -1841,15 +1841,15 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
 
       {/* Success Dialog */}
       <AlertDialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: "#C5BF81" }}>
+        <AlertDialogContent className="border-2" style={{ borderColor: "#D3AE24" }}>
           <AlertDialogHeader>
             <div
               className="mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-3"
-              style={{ background: "linear-gradient(135deg, #767014, #C5BF81)" }}
+              style={{ background: "linear-gradient(135deg, #1A3D1A, #D3AE24)" }}
             >
               <CheckCircle className="h-8 w-8 text-white" />
             </div>
-            <AlertDialogTitle className="text-center text-xl" style={{ color: "#767014" }}>
+            <AlertDialogTitle className="text-center text-xl" style={{ color: "#1A3D1A" }}>
               Booking Confirmed!
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center text-sm text-foreground">
@@ -1862,7 +1862,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
                 setSuccessDialogOpen(false);
                 if (onSuccess) onSuccess();
               }}
-              style={{ background: "linear-gradient(135deg, #767014, #C5BF81)", color: "#ffffff" }}
+              style={{ background: "linear-gradient(135deg, #1A3D1A, #D3AE24)", color: "#ffffff" }}
             >
               Done
             </AlertDialogAction>
@@ -1872,13 +1872,13 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
 
       {/* Error Dialog */}
       <AlertDialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
-        <AlertDialogContent className="border-2" style={{ borderColor: "#C5BF81" }}>
+        <AlertDialogContent className="border-2" style={{ borderColor: "#D3AE24" }}>
           <AlertDialogHeader>
             <div
               className="mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-3"
-              style={{ backgroundColor: "rgba(197, 191, 129, 0.3)" }}
+              style={{ backgroundColor: "rgba(211, 174, 36, 0.3)" }}
             >
-              <XCircle className="h-8 w-8" style={{ color: "#767014" }} />
+              <XCircle className="h-8 w-8" style={{ color: "#1A3D1A" }} />
             </div>
             <AlertDialogTitle className="text-center text-xl text-red-600">
               Unable to Save Booking
@@ -1890,7 +1890,7 @@ export default function BookingForm({ onSuccess, initialBooking, onCancel } = {}
           <AlertDialogFooter className="sm:justify-center">
             <AlertDialogAction
               onClick={() => setErrorDialogOpen(false)}
-              style={{ backgroundColor: "#767014", color: "#ffffff" }}
+              style={{ backgroundColor: "#1A3D1A", color: "#ffffff" }}
             >
               Review Form
             </AlertDialogAction>

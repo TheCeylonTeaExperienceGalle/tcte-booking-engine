@@ -180,7 +180,7 @@ export async function POST(request) {
         ? customer
         : selections?.[0]?.customers?.[0] || {};
       const directName = (primaryGuest.name || "Direct Guest").trim();
-      const directEmail = (primaryGuest.email || "direct-booking@reviva.internal").trim().toLowerCase();
+      const directEmail = (primaryGuest.email || "direct-booking@tcte.internal").trim().toLowerCase();
       const directContact = (primaryGuest.phone || primaryGuest.contact || null)?.trim() || null;
 
       leader = await prisma.leader.findFirst({
