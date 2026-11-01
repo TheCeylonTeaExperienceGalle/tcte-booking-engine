@@ -127,7 +127,7 @@ export default async function BookingResultPage({ searchParams }) {
   return (
     <div className="flex min-h-screen flex-col bg-[#F9F6F0]">
       <BookingHeader />
-      <main className="flex flex-1 items-center justify-center px-4 py-16">
+      <main id="main-content" className="flex flex-1 items-center justify-center px-4 py-16">
         <Card className="w-full max-w-2xl border border-white/60 bg-white/90 backdrop-blur-lg shadow-[0_25px_70px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-900/70">
           <CardHeader className="space-y-4 text-center">
             <span className={`inline-flex items-center justify-center rounded-full bg-emerald-50 px-4 py-1 text-sm font-semibold uppercase tracking-wide ${copy.accent}`}>

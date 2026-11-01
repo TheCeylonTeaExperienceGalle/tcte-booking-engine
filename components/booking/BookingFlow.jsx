@@ -558,7 +558,7 @@ export default function BookingFlow() {
   return (
     <>
       <BookingHeader />
-      <main className="min-h-screen py-16 bg-gradient-to-b from-background to-secondary/10">
+      <main id="main-content" className="min-h-screen py-16 bg-gradient-to-b from-background to-secondary/10">
         <div className="container mx-auto px-4">
           <BookingProvider>
             <BookingForm />

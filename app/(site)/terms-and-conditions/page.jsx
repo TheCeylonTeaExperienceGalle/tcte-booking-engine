@@ -87,7 +87,7 @@ export default function TermsAndConditions() {
   ];
 
   return (
-    <main className="min-h-screen">
+    <main id="main-content" className="min-h-screen">
         {/* Hero Section */}
         <section className="py-28 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1A3D1A 0%, #D3AE24 50%, #1A3D1A 100%)' }}>
           <div className="absolute top-0 right-0 w-96 h-96 rounded-full -translate-y-1/2 translate-x-1/2" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.15), transparent)' }} />
