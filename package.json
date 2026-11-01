@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "build:staging": "cross-env NEXT_DIST_DIR=.next-staging next build",
+    "build": "prisma generate && next build",
+    "build:staging": "prisma generate && cross-env NEXT_DIST_DIR=.next-staging next build",
     "start": "node server.js",
     "lint": "eslint"
   },
