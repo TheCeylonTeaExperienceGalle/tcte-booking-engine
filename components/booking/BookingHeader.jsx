@@ -1,16 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
 const links = [
   { label: "Home", href: "https://www.theceylonteaexperience.com/" },
   { label: "About", href: "https://www.theceylonteaexperience.com/#about" },
   { label: "Services", href: "https://www.theceylonteaexperience.com/#services" },
   { label: "Gallery", href: "https://www.theceylonteaexperience.com/#gallery" },
-  { label: "Journal", href: "https://www.theceylonteaexperience.com/blog", normalCase: true },
+  { label: "Journal", href: "https://www.theceylonteaexperience.com/blog" },
   { label: "Contact", href: "https://www.theceylonteaexperience.com/#contact" },
 ];
+
+const linkType = {
+  fontFamily: "Lato, Arial, sans-serif",
+  fontSize: "12px",
+  fontWeight: 700,
+  letterSpacing: "0.05em",
+};
 
 export default function BookingHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -32,6 +38,15 @@ export default function BookingHeader() {
       >
         Skip to main content
       </a>
+      <style>{`
+        @font-face {
+          font-family: "Lato";
+          font-style: normal;
+          font-weight: 700;
+          font-display: swap;
+          src: url("https://fonts.gstatic.com/s/lato/v25/S6u9w4BMUTPHh6UVSwiPGQ3q5d0.woff2") format("woff2");
+        }
+      `}</style>
       <header className="sticky top-0 z-50">
         <nav
           aria-label="Primary navigation"
@@ -51,14 +66,12 @@ export default function BookingHeader() {
             />
           </a>
 
-          <ul className="hidden gap-4 text-xs font-sans font-bold uppercase tracking-wider text-gray-600 md:flex lg:gap-8">
+          <ul className="hidden gap-4 text-gray-600 md:flex lg:gap-8" style={linkType}>
             {links.map((link) => (
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className={`cursor-pointer transition hover:text-[#2D6A2D] ${
-                    link.normalCase ? "normal-case" : ""
-                  }`}
+                  className="cursor-pointer transition hover:text-[#2D6A2D]"
                 >
                   {link.label}
                 </a>
@@ -66,13 +79,10 @@ export default function BookingHeader() {
             ))}
           </ul>
 
-          <div className="hidden items-center gap-4 md:flex">
-            <Link
-              href="/book"
-              className="cursor-pointer rounded-sm bg-[#2D6A2D] px-4 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-md transition hover:bg-[#1A3D1A] lg:px-6"
-            >
+          <div className="hidden items-center gap-4 md:flex" aria-hidden="true">
+            <span className="invisible px-4 py-3 text-xs font-bold uppercase tracking-wider lg:px-6">
               Book Now
-            </Link>
+            </span>
           </div>
 
           <button
@@ -96,22 +106,12 @@ export default function BookingHeader() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
-                  className={`block w-full cursor-pointer border-b border-gray-100 px-8 py-4 text-left text-xs font-sans font-bold tracking-wider text-gray-600 hover:bg-gray-50 hover:text-[#2D6A2D] ${
-                    link.normalCase ? "normal-case" : "uppercase"
-                  }`}
+                  className="block w-full cursor-pointer border-b border-gray-100 px-8 py-4 text-left text-gray-600 hover:bg-gray-50 hover:text-[#2D6A2D]"
+                  style={linkType}
                 >
                   {link.label}
                 </a>
               ))}
-              <div className="px-8 py-6">
-                <Link
-                  href="/book"
-                  onClick={() => setMenuOpen(false)}
-                  className="block w-full rounded-sm bg-[#2D6A2D] py-3 text-center text-xs font-bold uppercase tracking-wider text-white shadow-md"
-                >
-                  Book Now
-                </Link>
-              </div>
             </div>
           )}
         </nav>
