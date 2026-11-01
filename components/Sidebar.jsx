@@ -116,7 +116,7 @@ export default function Sidebar({
             <Link href="/dashboard" className={cn("flex items-center", isCollapsed ? "justify-center" : "space-x-3")}>
               <Image
                 src="/image/logo/logo.png"
-                alt="Reviva logo"
+                alt="The Ceylon Tea Experience logo"
                 width={200}
                 height={200}
                 className="object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-110 brightness-0 invert"

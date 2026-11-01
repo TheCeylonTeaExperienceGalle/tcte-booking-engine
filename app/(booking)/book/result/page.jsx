@@ -104,7 +104,7 @@ async function updateDevStatus(orderId, statusParam) {
 
 export const metadata = {
   title: "Booking payment status",
-  description: "Review the outcome of your Reviva experience booking payment.",
+  description: "Review the outcome of your Ceylon Tea Experience booking payment.",
 };
 
 export default async function BookingResultPage({ searchParams }) {

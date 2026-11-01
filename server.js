@@ -26,6 +26,6 @@ app.prepare().then(() => {
       process.exit(1);
     })
     .listen(port, hostname, () => {
-      console.log(`> Reviva server ready on http://${hostname}:${port}`);
+      console.log(`> TCTE server ready on http://${hostname}:${port}`);
     });
 });

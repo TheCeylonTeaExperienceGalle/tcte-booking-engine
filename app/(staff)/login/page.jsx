@@ -154,7 +154,7 @@ export default function LoginPage() {
                     {isLoading ? "Signing in..." : "Sign in"}
                   </Button>
                   <p className="text-center text-sm text-muted-foreground">
-                    New to Reviva? <a href="mailto:reservations@theceylonteaexperience.com" className="font-medium text-primary hover:underline">Chat with our admin team</a>
+                    New to The Ceylon Tea Experience? <a href="mailto:reservations@theceylonteaexperience.com" className="font-medium text-primary hover:underline">Chat with our admin team</a>
                   </p>
                 </form>
               </CardContent>

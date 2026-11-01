@@ -135,7 +135,7 @@ export async function PUT(request, { params }) {
       // Direct booking: resolve direct profile (role: USER)
       const primaryGuest = selections?.[0]?.customers?.[0] || {};
       const directName = (primaryGuest.name || "Direct Guest").trim();
-      const directEmail = (primaryGuest.email || "direct-booking@reviva.internal").trim().toLowerCase();
+      const directEmail = (primaryGuest.email || "direct-booking@tcte.internal").trim().toLowerCase();
       const directContact = (primaryGuest.phone || null)?.trim() || null;
 
       leader = await prisma.leader.findFirst({
