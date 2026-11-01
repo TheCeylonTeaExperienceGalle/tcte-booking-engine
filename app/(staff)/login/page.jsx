@@ -1,9 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -17,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -143,9 +139,12 @@ export default function LoginPage() {
                       <Checkbox id="remember" />
                       <span>Remember me</span>
                     </label>
-                    <Link href="/contact" className="font-medium text-primary hover:underline">
+                    <a
+                      href="mailto:reservations@theceylonteaexperience.com"
+                      className="font-medium text-primary hover:underline"
+                    >
                       Need help?
-                    </Link>
+                    </a>
                   </div>
                   <Button
                     type="submit"
@@ -155,7 +154,7 @@ export default function LoginPage() {
                     {isLoading ? "Signing in..." : "Sign in"}
                   </Button>
                   <p className="text-center text-sm text-muted-foreground">
-                    New to Reviva? <Link href="/contact" className="font-medium text-primary hover:underline">Chat with our admin team</Link>
+                    New to Reviva? <a href="mailto:reservations@theceylonteaexperience.com" className="font-medium text-primary hover:underline">Chat with our admin team</a>
                   </p>
                 </form>
               </CardContent>

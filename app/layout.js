@@ -15,21 +15,21 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "THE CEYLON TEA | Discover The Art Of Ceylon Tea Experience",
-  description: "Immerse yourself in the world of tea with THE CEYLON TEA. Experience authentic tea plucking, black tea and green tea experiences, and professional tea tasting sessions in our scenic tea estates.",
-  keywords: "ceylon tea, tea tourism, tea tours, tea plucking, tea tasting, black tea experience, green tea experience, tea estates",
-  authors: [{ name: "THE CEYLON TEA" }],
+  title: "Book | The Ceylon Tea Experience",
+  description:
+    "Book a session at The Ceylon Tea Experience. Review payment status, privacy, refunds, and booking terms.",
+  authors: [{ name: "The Ceylon Tea Experience" }],
   openGraph: {
-    title: "THE CEYLON TEA | Discover The Art Of Ceylon Tea Experience",
-    description: "Immerse yourself in the world of tea with authentic Ceylon tea tourism experiences",
+    title: "Book | The Ceylon Tea Experience",
+    description: "Book a session and manage your reservation at The Ceylon Tea Experience.",
     type: "website",
     locale: "en_US",
-    siteName: "THE CEYLON TEA",
+    siteName: "The Ceylon Tea Experience",
   },
   twitter: {
-    card: "summary_large_image",
-    title: "THE CEYLON TEA | Discover The Art Of Ceylon Tea Experience",
-    description: "Immerse yourself in the world of tea with authentic Ceylon tea tourism experiences",
+    card: "summary",
+    title: "Book | The Ceylon Tea Experience",
+    description: "Book a session and manage your reservation at The Ceylon Tea Experience.",
   },
 };
 

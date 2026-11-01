@@ -1,17 +1,13 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import LoadingScreen from "@/components/LoadingScreen";
-import FloatingActionButtons from "@/components/FloatingActionButtons";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaFileContract, FaGlobe, FaBoxOpen, FaShoppingCart, FaTruck, FaUndo, FaCopyright, FaExclamationTriangle, FaEdit, FaEnvelope } from "react-icons/fa";
 
-export default function TermsAndConditions() {
-  const [isLoading, setIsLoading] = useState(true);
+export const metadata = {
+  title: "Terms and Conditions | The Ceylon Tea Experience",
+  description: "Terms that apply when you book an experience at The Ceylon Tea Experience.",
+};
 
+export default function TermsAndConditions() {
   const sections = [
     {
       icon: FaGlobe,
@@ -91,11 +87,7 @@ export default function TermsAndConditions() {
   ];
 
   return (
-    <>
-      {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
-      <Header />
-      <FloatingActionButtons />
-      <main className="min-h-screen">
+    <main className="min-h-screen">
         {/* Hero Section */}
         <section className="py-28 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #767014 0%, #C5BF81 50%, #767014 100%)' }}>
           <div className="absolute top-0 right-0 w-96 h-96 rounded-full -translate-y-1/2 translate-x-1/2" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.15), transparent)' }} />
@@ -207,8 +199,6 @@ export default function TermsAndConditions() {
             </div>
           </div>
         </section>
-      </main>
-      <Footer />
-    </>
+    </main>
   );
 }

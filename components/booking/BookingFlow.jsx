@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import BookingHeader from "@/components/booking/BookingHeader";
+import BookingFooter from "@/components/booking/BookingFooter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FaCheck } from "react-icons/fa";
@@ -557,7 +557,7 @@ function BookingForm() {
 export default function BookingFlow() {
   return (
     <>
-      <Header />
+      <BookingHeader />
       <main className="min-h-screen py-16 bg-gradient-to-b from-background to-secondary/10">
         <div className="container mx-auto px-4">
           <BookingProvider>
@@ -565,7 +565,7 @@ export default function BookingFlow() {
           </BookingProvider>
         </div>
       </main>
-      <Footer />
+      <BookingFooter />
     </>
   );
 }

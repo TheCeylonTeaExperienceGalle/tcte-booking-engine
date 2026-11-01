@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import BookingHeader from "@/components/booking/BookingHeader";
+import BookingFooter from "@/components/booking/BookingFooter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import prisma from "@/lib/prisma";
@@ -126,7 +126,7 @@ export default async function BookingResultPage({ searchParams }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,_#fef7ed,_#f1f5f9)] dark:bg-slate-950">
-      <Header />
+      <BookingHeader />
       <main className="flex flex-1 items-center justify-center px-4 py-16">
         <Card className="w-full max-w-2xl border border-white/60 bg-white/90 backdrop-blur-lg shadow-[0_25px_70px_rgba(15,23,42,0.18)] dark:border-slate-800 dark:bg-slate-900/70">
           <CardHeader className="space-y-4 text-center">
@@ -152,13 +152,13 @@ export default async function BookingResultPage({ searchParams }) {
                 <Link href="/book">Book another experience</Link>
               </Button>
               <Button asChild className="bg-gradient-to-r from-emerald-600 to-amber-500 text-white shadow-lg shadow-emerald-600/30">
-                <Link href="/">Return home</Link>
+                <a href="https://www.theceylonteaexperience.com">Return home</a>
               </Button>
             </div>
           </CardContent>
         </Card>
       </main>
-      <Footer />
+      <BookingFooter />
     </div>
   );
 }
